@@ -3,6 +3,7 @@
 **AI-Native 交互标本馆：48 个可上手把玩的 UI/UX 交互标本 + 零依赖 `ilab` CLI + Agent `SKILL.md`。**
 
 [![CI](https://github.com/fatherplus/interaction-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/fatherplus/interaction-lab/actions/workflows/ci.yml)
+[![Live](https://img.shields.io/badge/live-ilab.hongme.xyz-38bdf8.svg)](https://ilab.hongme.xyz)
 [![License: MIT](https://img.shields.io/badge/license-MIT-0071e3.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-3776ab.svg)](https://www.python.org/)
 

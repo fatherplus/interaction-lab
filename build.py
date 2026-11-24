@@ -158,14 +158,18 @@ def build() -> None:
     cat_map = {c["id"]: c for c in cats}
     patterns_by_id = {p["id"]: p for p in patterns}
 
+    # Clear the contents but keep dist/ itself: production may bind-mount it
+    # (systemd ReadWritePaths / container volume), and the directory must survive.
     if OUT.exists():
-        shutil.rmtree(OUT)
-    (OUT / "css").mkdir(parents=True)
-    (OUT / "js").mkdir(parents=True)
-    (OUT / "api").mkdir(parents=True)
-    (OUT / "patterns").mkdir(parents=True)
-    (OUT / "specimens").mkdir(parents=True)
-    (OUT / "cli").mkdir(parents=True)
+        for child in OUT.iterdir():
+            if child.is_dir() and not child.is_symlink():
+                shutil.rmtree(child)
+            else:
+                child.unlink()
+    else:
+        OUT.mkdir(parents=True)
+    for sub in ("css", "js", "api", "patterns", "specimens", "cli"):
+        (OUT / sub).mkdir(exist_ok=True)
 
     # 1. Copy CSS, JS, CLI & Skill
     for f in (SRC / "css").glob("*.css"):

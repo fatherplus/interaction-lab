@@ -139,6 +139,32 @@ docker compose start interaction-lab
 - 回滚：`git checkout <上一个 tag> && docker compose up -d --build`；数据库向后兼容，无需迁移。
 - 查看日志：`docker compose logs -f interaction-lab`；关闭访问日志可设 `IL_QUIET=1`。
 
+## 本项目的实际线上部署（参考）
+
+当前线上站：**https://ilab.hongme.xyz**（华为云 Flexus L，Ubuntu 24.04，Nginx + Let's Encrypt）。
+
+不用 Docker，走 systemd + 系统 Python，内存占用约 40 MB：
+
+| 项 | 路径 / 值 |
+| :--- | :--- |
+| 代码与构建产物 | `/opt/interaction-lab`（属主 `ilab`，`dist/` 由启动前构建） |
+| 数据 | `/var/lib/interaction-lab/telemetry.sqlite`（WAL，`750`） |
+| 环境变量 | `/etc/interaction-lab/env`（`600`，含固定 `IL_TELEMETRY_SALT`） |
+| 服务 | `systemctl status interaction-lab`（`127.0.0.1:8900`，启动前跑 `build.py`） |
+| Nginx | `/etc/nginx/sites-available/ilab.hongme.xyz.conf`（80 跳转 + ACME，443 反代 8900） |
+| 证书 | acme.sh HTTP-01：`/root/.acme.sh/ilab.hongme.xyz_ecc/` → `/etc/nginx/ssl/ilab.hongme.xyz.crt` |
+
+发布只需要：
+
+```bash
+rsync -az --delete --exclude '.git/' --exclude 'dist/' --exclude 'telemetry-data/' \
+  ./ root@<server>:/opt/interaction-lab/
+ssh root@<server> 'chown -R ilab:ilab /opt/interaction-lab && systemctl restart interaction-lab'
+```
+
+一个部署细节：`build.py` 只清空 `dist/` 的内容、不删除目录本身，这样 systemd 的
+`ReadWritePaths=/opt/interaction-lab/dist`（以及容器卷挂载）不会因为目录被删而失效。
+
 ## 上线检查清单
 
 - [ ] `curl -fsS https://<域名>/api/health` 返回 `{"status":"ok",...}`

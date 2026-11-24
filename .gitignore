@@ -1,0 +1,43 @@
+# Build output
+dist/
+build/
+*.egg-info/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Telemetry data (never commit a database or its hashing salt)
+data/telemetry.sqlite*
+data/.telemetry_salt
+telemetry-data/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+
+# Private local material — third-party mirror and its sync tool are not part of
+# the open-source distribution.
+mirror/
+scripts/sync_remote.py
+
+# Local agent / design workspaces (scratch, not product)
+.zcode/
+.impeccable/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key

@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Interaction Lab — AI-Native 交互标本中心</title>
+  <meta name="description" content="开源高保真 UI/UX 交互展示中心：48 个实时可操纵光学交互标本，配合 ilab CLI 与 SKILL.md 让任意 AI Agent 按分类自动查阅并还原高级交互。">
+  <link rel="stylesheet" href="css/workbench.css">
+</head>
+<body>
+  <div class="ambient-bg" aria-hidden="true"></div>
+
+  <!-- ULTRA-CLEAN SINGLE-ROW FROSTED TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#/" id="brandHome">
+        <span class="brand-orb" aria-hidden="true"></span>
+        <span class="brand-text">
+          <strong>INTERACTION LAB</strong>
+          <small>AI-NATIVE INTERACTION HUB</small>
+        </span>
+      </a>
+
+      <nav class="top-cats" id="topCats" aria-label="交互意图分类"></nav>
+
+      <div class="tb-actions">
+        <button class="cmd-trigger" id="openCmd" type="button" aria-label="快速搜索">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <span>搜索</span>
+          <kbd>⌘K</kbd>
+        </button>
+
+        <button class="ai-setup-btn" id="openAiSetup" type="button">
+          <span class="ai-dot" aria-hidden="true"></span>
+          <span>接入 AI · CLI / Skill</span>
+        </button>
+
+        <button class="theme-btn" id="themeToggle" type="button" aria-label="切换暗室与暖白主题">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <span id="themeLabel">暖白</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-shell">
+    <!-- ABOVE-THE-FOLD HERO FLAGSHIP SHOWCASE -->
+    <section class="hero-showcase" id="heroShowcase" aria-label="旗舰交互展台">
+      <div class="hero-header-row">
+        <div class="hero-kicker">
+          <span class="pulse-dot"></span>
+          <span>LIVE INTERACTION SHOWCASE · 直接动手体验，AI 用 CLI 按分类查规范</span>
+        </div>
+        <div class="hero-switcher" id="heroSwitcher" role="tablist" aria-label="切换旗舰交互"></div>
+      </div>
+
+      <div class="hero-body">
+        <div class="hero-stage-wrap">
+          <div class="hero-stage-frame" id="heroStageFrame">
+            <iframe id="heroIframe" title="旗舰交互实时舞台" loading="eager"></iframe>
+          </div>
+        </div>
+
+        <aside class="hero-pod">
+          <div class="hero-pod-top">
+            <span class="hero-idx" id="heroIdx">01 / 05 · FLAGSHIP</span>
+            <h1 class="hero-title" id="heroTitle">3D 透视焦点舞台</h1>
+            <div class="hero-en" id="heroEn">CoverFlow Depth Focus</div>
+            <p class="hero-essence" id="heroEssence"></p>
+          </div>
+
+          <div class="cli-box">
+            <span class="cli-lbl">AGENT CLI 调用</span>
+            <button type="button" class="cli-cmd" id="heroCliCopy" title="点击复制 CLI 命令">
+              <code id="heroCliText">ilab get coverflow-depth-stage</code>
+              <span>复制</span>
+            </button>
+          </div>
+
+          <div class="hero-pod-actions">
+            <button type="button" class="btn-primary flex1" id="heroCopyPrompt">复制 AI 蓝图规范</button>
+            <div class="hero-sub-btns">
+              <button type="button" class="btn-outline flex1" id="heroZoom">放大 1:1</button>
+              <button type="button" class="btn-outline flex1" id="heroFlipTheme">反转明暗</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- CLEAN CATEGORY HEADLINE -->
+    <section class="section-head">
+      <div>
+        <div class="sh-row">
+          <h2 id="viewTitle">全部高保真交互</h2>
+          <span class="count-pill" id="viewCount">48</span>
+        </div>
+        <p class="sh-sub" id="viewSummary">48 个可交互标本，均按精确测量参数独立重写实现。人类可直接把玩，AI 可通过 ilab CLI 与 SKILL.md 按分类检索。</p>
+      </div>
+      <div class="sh-links">
+        <a href="SKILL.md" target="_blank" rel="noopener">SKILL.md</a>
+        <a href="llms.txt" target="_blank" rel="noopener">llms.txt</a>
+        <a href="api/categories" target="_blank" rel="noopener">/api/categories</a>
+      </div>
+    </section>
+
+    <!-- PURE 2-COLUMN HIGH-TECH SPECULAR GALLERY -->
+    <section class="gallery-grid" id="galleryGrid"></section>
+  </main>
+
+  <!-- CLEAN FRAMELESS 1:1 LIGHTBOX MODAL (Zero studio clutter!) -->
+  <div class="modal-scrim" id="lightboxModal" hidden>
+    <div class="lightbox-dialog" role="dialog" aria-modal="true" aria-label="1:1 交互放大预览">
+      <div class="lb-head">
+        <div class="lb-head-l">
+          <strong id="lbTitle"></strong>
+          <span id="lbEn"></span>
+          <button type="button" class="cli-chip" id="lbCliChip" title="点击复制 CLI 命令"></button>
+        </div>
+        <div class="lb-head-r">
+          <button type="button" class="btn-outline" id="lbFlipTheme">反转明暗</button>
+          <button type="button" class="btn-outline" id="lbCopyPrompt">复制规范</button>
+          <button type="button" class="btn-outline" id="lbOpenMd">.md 原文 ↗</button>
+          <button type="button" class="close-x" id="closeLightbox" aria-label="关闭">✕</button>
+        </div>
+      </div>
+      <div class="lb-stage" id="lbStage">
+        <div class="lb-scaler" id="lbScaler">
+          <iframe id="lbIframe" title="全尺寸交互标本预览"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI CLI & SKILL 10-SECOND SETUP MODAL -->
+  <div class="modal-scrim" id="aiModal" hidden>
+    <div class="ai-dialog" role="dialog" aria-modal="true" aria-label="配置 AI Agent CLI 与 Skill">
+      <div class="ai-head">
+        <div>
+          <h3>让你的 AI Agent 自动来这里查交互</h3>
+          <p>装好 <code>ilab</code> CLI 与 <code>SKILL.md</code> 后，哪怕是低智力 / 轻量模型，也能先按分类查规范再写 UI，自动对齐精确曲线、状态机与反模式禁区。</p>
+        </div>
+        <button type="button" class="close-x" id="closeAiModal" aria-label="关闭">✕</button>
+      </div>
+
+      <div class="ai-body">
+        <div class="setup-step">
+          <div class="step-head">
+            <span class="step-num">01</span>
+            <strong>一行命令安装零依赖 CLI（ilab）</strong>
+            <button type="button" class="copy-mini" id="copyCliInstall">复制命令</button>
+          </div>
+          <pre class="cmd-pre" id="cliInstallCmd"></pre>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-head">
+            <span class="step-num">02</span>
+            <strong>给你的 Agent 安装 SKILL.md（Claude Code / Cursor / Codex / Antigravity 通用）</strong>
+            <div class="step-head-r">
+              <button type="button" class="copy-mini" id="copySkillInstall">复制安装命令</button>
+              <button type="button" class="copy-mini" id="copySkillRaw">复制 SKILL.md 全文</button>
+            </div>
+          </div>
+          <pre class="cmd-pre" id="skillInstallCmd"></pre>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-head">
+            <span class="step-num">03</span>
+            <strong>Agent 自动使用的 4 条核心命令（全部实时记录至 SQLite 埋点）</strong>
+          </div>
+          <pre class="cmd-pre">ilab categories                      # 查看 6 大交互意图分类
+ilab list navigation-focus           # 按分类列出该类全部交互
+ilab search "按钮没反馈"              # 按中英文症状词反查最匹配的交互
+ilab get coverflow-depth-stage       # 拉取精确 Token + 状态机 + DO NOT 禁区 + 代码骨架
+ilab get coverflow-depth-stage --raw-html  # 需要完整高精视觉源码时直拉原件</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⌘K COMMAND PALETTE -->
+  <div class="modal-scrim" id="cmdModal" hidden>
+    <div class="cmd-dialog" role="dialog" aria-modal="true" aria-label="快速搜索交互">
+      <div class="cmd-input-row">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="cmdInput" type="text" placeholder="输入动作、组件名或症状，例如：按钮没反馈、毛玻璃、ATLAS、3D…" autocomplete="off">
+        <kbd>ESC</kbd>
+      </div>
+      <div class="cmd-results" id="cmdResults"></div>
+      <div class="cmd-foot">
+        <span><kbd>↑</kbd><kbd>↓</kbd> 选择</span>
+        <span><kbd>Enter</kbd> 放大体验</span>
+        <span>支持口语症状与英文术语反查</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/telemetry.js"></script>
+  <script src="js/ai-engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

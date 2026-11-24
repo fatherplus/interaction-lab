@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 29 集 · 提升AI审美！6种Dashboard排版 — Interaction Lab</title>
+<style>
+:root{--ease:cubic-bezier(.16,1,.3,1);--bg:#f2f2f4;--panel:#fff;--ink:#15161a;
+  --ink-2:rgba(0,0,0,.72);--ink-3:rgba(0,0,0,.42);--line:rgba(0,0,0,.09);
+  --accent:#0071e3;--accent-2:#5ac8fa;--chip:rgba(0,0,0,.05)}
+html[data-theme="dark"]{color-scheme:dark;--bg:#08090c;--panel:#131418;--ink:#f2f3f5;
+  --ink-2:rgba(255,255,255,.74);--ink-3:rgba(255,255,255,.44);--line:rgba(255,255,255,.12);
+  --accent:#2997ff;--accent-2:#64d2ff;--chip:rgba(255,255,255,.08)}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;overflow-x:hidden}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;
+  transition:background .22s linear,color .22s linear}
+.bar{position:sticky;top:0;z-index:90;backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  background:color-mix(in oklab,var(--bg) 82%,transparent);border-bottom:1px solid var(--line)}
+.bar .in{max-width:1240px;margin:0 auto;padding:0 26px;height:54px;display:flex;align-items:center;gap:14px}
+.back{display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--ink-2);font-size:13px}
+.back:hover{color:var(--ink)}
+.back svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.crumb{font-size:13px;color:var(--ink-3)}
+.crumb b{color:var(--ink);font-weight:600}
+.bar .sp{margin-left:auto}
+.toggle{border:1px solid var(--line);background:var(--chip);color:var(--ink);font:inherit;font-size:12.5px;
+  padding:6px 13px;border-radius:999px;cursor:pointer;transition:transform .2s var(--ease)}
+.toggle:hover{transform:translateY(-1px)}
+.stagewrap{max-width:1240px;margin:0 auto;padding:26px 26px 60px}
+.note{max-width:1240px;margin:0 auto;padding:0 26px 40px;color:var(--ink-3);font-size:12.5px;line-height:1.7}
+.note b{color:var(--ink-2)}
+.note a{color:var(--accent);text-decoration:none}
+@media (max-width:700px){.stagewrap{padding:14px 12px 40px} .crumb{display:none}}
+</style>
+<style>
+/* 组件修正：ep26 的模拟侧栏原本写成 position:fixed（原片是静态侧栏），
+   在整页宽下会脱离模拟框，这里强制回到文档流。 */
+.ep26 .rail{position:static}
+
+/* ---------- tokens：默认浅色，父级 data-theme=dark 跟随 ---------- */
+.ep29{
+  --bg:#efece5; --surface:#fffdf9; --surface2:#f4f1e9; --stage:#e5e1d7; --tabbg:#fbf9f4;
+  --ink:#131519; --ink2:#54585f; --ink3:#8a8d93; --ink4:#a8aaa9;
+  --line:rgba(18,20,24,.11); --line2:rgba(18,20,24,.06); --soft:rgba(18,20,24,.055);
+  --accent:#e4572e; --sage:#7d9b86;
+  --v4a:#efe7f7; --v4b:#f7f3fc; --v4c:#eaf1fa; --v4line:rgba(28,24,40,.07); --v4card:rgba(255,255,255,.66);
+  --dm-card:#fffdfa; --dm-field1:#fbdcd8; --dm-field2:#e2eee2; --dm-field3:#fdf7f2; --dm-dot:#8fae97; --dm-ink:#2a2b26;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+[data-theme="dark"] .ep29, .ep29[data-theme="dark"]{
+  --bg:#0d0f12; --surface:#171a1e; --surface2:#1f2328; --stage:#0f1114; --tabbg:#191c21;
+  --ink:#f2f0ea; --ink2:#aaa8a2; --ink3:#84838a; --ink4:#6a6970;
+  --line:rgba(255,255,255,.13); --line2:rgba(255,255,255,.07); --soft:rgba(255,255,255,.07);
+  --accent:#ff6a45; --sage:#93b39c;
+  --v4a:#1a1724; --v4b:#1c1a26; --v4c:#161b22; --v4line:rgba(255,255,255,.08); --v4card:rgba(255,255,255,.05);
+  --dm-card:#1b1f22; --dm-field1:#2a1f22; --dm-field2:#1a2420; --dm-field3:#141517; --dm-dot:#9fd0b4; --dm-ink:#e9e7e0;
+}
+.ep29[data-theme="light"]{
+  --bg:#efece5; --surface:#fffdf9; --surface2:#f4f1e9; --stage:#e5e1d7; --tabbg:#fbf9f4;
+  --ink:#131519; --ink2:#54585f; --ink3:#8a8d93; --ink4:#a8aaa9;
+  --line:rgba(18,20,24,.11); --line2:rgba(18,20,24,.06); --soft:rgba(18,20,24,.055);
+  --v4a:#efe7f7; --v4b:#f7f3fc; --v4c:#eaf1fa; --v4line:rgba(28,24,40,.07); --v4card:rgba(255,255,255,.66);
+  --dm-card:#fffdfa; --dm-field1:#fbdcd8; --dm-field2:#e2eee2; --dm-field3:#fdf7f2; --dm-dot:#8fae97; --dm-ink:#2a2b26;
+}
+.ep29 *{box-sizing:border-box;}
+.ep29{font-family:ui-sans-serif,system-ui,-apple-system,"SF Pro Text","Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  color:var(--ink);-webkit-font-smoothing:antialiased;text-align:left;}
+.ep29 .sprite{position:absolute;width:0;height:0;overflow:hidden;}
+.ep29 .ic{width:14px;height:14px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ---------- 原则句 / 舞台 / 规格行 ---------- */
+.ep29 .principle{margin:0 0 12px;max-width:74ch;font-size:13.5px;line-height:1.7;color:var(--ink2);letter-spacing:.01em;}
+.ep29 .principle b{font-weight:650;color:var(--ink);font-variant-numeric:tabular-nums;}
+.ep29 .stage{position:relative;display:flex;flex-direction:column;gap:9px;max-width:720px;height:388px;padding:10px;border-radius:18px;
+  background:var(--stage);box-shadow:inset 0 0 0 1px var(--line2);overflow:hidden;}
+.ep29 .spec{margin:9px 0 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;font-size:10.5px;line-height:1.5;color:var(--ink3);}
+.ep29 .spec b{font-weight:650;color:var(--ink2);}
+.ep29 .spec [data-spec-text]{font-variant-numeric:tabular-nums;}
+
+/* ---------- tabs ---------- */
+.ep29 .tabs{display:flex;gap:5px;flex:0 0 auto;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;padding:0 1px;}
+.ep29 .tabs::-webkit-scrollbar{display:none;}
+.ep29 .tab{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;height:31px;padding:0 10px;border:0;border-radius:999px;
+  background:transparent;color:var(--ink2);font:inherit;font-size:12px;line-height:1;letter-spacing:.01em;cursor:pointer;
+  transition:background .26s var(--ease),color .26s var(--ease);}
+.ep29 .tab i{font-style:normal;font-size:9px;opacity:.55;font-variant-numeric:tabular-nums;}
+.ep29 .tab .fs{display:none;}
+.ep29 .tab:hover{background:var(--soft);color:var(--ink);}
+.ep29 .tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.ep29 .tab.is-on{background:var(--ink);color:var(--tabbg);}
+.ep29 .tab.is-on i{opacity:.7;}
+.ep29 .tabcount{margin-left:auto;padding-left:10px;flex:0 0 auto;font-size:9px;letter-spacing:.14em;color:var(--ink3);white-space:nowrap;font-variant-numeric:tabular-nums;}
+@media (max-width:700px){.ep29 .tabcount{display:none;}}
+
+/* ---------- 面板切换 ---------- */
+.ep29 .views{position:relative;flex:1;min-height:0;container-type:inline-size;}
+.ep29 .view{position:absolute;inset:0;border-radius:13px;overflow:hidden;opacity:0;transform:translateY(9px) scale(.99);
+  pointer-events:none;transition:opacity .28s var(--ease),transform .28s var(--ease);}
+.ep29 .view.is-on{opacity:1;transform:none;pointer-events:auto;}
+.ep29 .app{height:100%;border-radius:13px;overflow:hidden;min-width:0;}
+
+/* ================= 01 深色三列 ================= */
+.ep29 .a1{display:grid;grid-template-columns:38px minmax(0,1fr) 92px;grid-template-rows:minmax(0,1fr);background:#0a1011;color:#eaf2ee;}
+.ep29 .r1{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;background:#070c0d;border-right:1px solid rgba(255,255,255,.06);}
+.ep29 .r1 .mk{width:16px;height:16px;border-radius:5px;background:linear-gradient(140deg,#64e0b3,#2f8f74);margin-bottom:4px;flex:0 0 auto;}
+.ep29 .icbtn{display:grid;place-items:center;width:26px;height:26px;border:0;border-radius:8px;background:transparent;color:rgba(255,255,255,.42);cursor:pointer;transition:background .24s,color .24s;}
+.ep29 .icbtn:hover{background:rgba(255,255,255,.07);color:#fff;}
+.ep29 .icbtn.is-on{background:rgba(100,224,179,.15);color:#64e0b3;}
+.ep29 .icbtn:focus-visible{outline:2px solid #64e0b3;outline-offset:1px;}
+.ep29 .r1 .av1{margin-top:auto;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.1);font-size:8px;color:#cfdcd7;}
+.ep29 .m1{display:flex;flex-direction:column;gap:6px;padding:8px 9px;min-width:0;min-height:0;}
+.ep29 .h1{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;min-width:0;}
+.ep29 .eye{margin:0;font-size:6.4px;letter-spacing:.18em;color:#6f8380;white-space:nowrap;}
+.ep29 .h1 h3{margin:2px 0 0;font-size:11.5px;font-weight:620;letter-spacing:-.01em;white-space:nowrap;}
+.ep29 .pill1{flex:0 0 auto;padding:2px 6px;border-radius:999px;border:1px solid rgba(255,255,255,.14);font-size:6.6px;color:#9fb0ac;white-space:nowrap;}
+.ep29 .kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;}
+.ep29 .kpi{min-width:0;padding:5px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.03);
+  color:inherit;font:inherit;text-align:left;cursor:pointer;transition:background .26s var(--ease),border-color .26s var(--ease);}
+.ep29 .kpi i{display:block;font-style:normal;font-size:6.2px;letter-spacing:.11em;text-transform:uppercase;color:#7d908c;white-space:nowrap;overflow:hidden;}
+.ep29 .kpi b{display:block;margin-top:1px;font-size:13.5px;line-height:1.15;font-weight:640;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.ep29 .kpi em{display:block;font-style:normal;font-size:6.2px;color:#64e0b3;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.ep29 .kpi[data-k="2"] em{color:#e3a07a;}
+.ep29 .kpi:hover{background:rgba(255,255,255,.06);}
+.ep29 .kpi.is-on{background:rgba(100,224,179,.10);border-color:rgba(100,224,179,.30);}
+.ep29 .kpi.is-on b{color:#8ff0cd;}
+.ep29 .kpi:focus-visible{outline:2px solid #64e0b3;outline-offset:1px;}
+.ep29 .chart{position:relative;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding:5px 6px 3px;border-radius:8px;
+  border:1px solid rgba(255,255,255,.06);
+  background-image:linear-gradient(180deg,rgba(100,224,179,.07),transparent 72%),repeating-linear-gradient(to top,transparent 0 17px,rgba(255,255,255,.05) 17px 18px);}
+.ep29 .chart svg{width:100%;flex:1;min-height:0;display:block;overflow:visible;}
+.ep29 .a1 .area{opacity:.9;}
+.ep29 .a1 .line{stroke:#64e0b3;stroke-width:1.5;vector-effect:non-scaling-stroke;stroke-linecap:round;}
+.ep29 .a1 .dot{fill:#c8fbe6;stroke:#0a1011;stroke-width:.8;}
+.ep29 .xax{display:flex;justify-content:space-between;font-size:5.8px;letter-spacing:.1em;color:#5f7370;padding-top:2px;}
+.ep29 .s1{display:flex;flex-direction:column;gap:4px;min-height:0;padding:8px 7px;background:#0d1415;border-left:1px solid rgba(255,255,255,.06);min-width:0;}
+.ep29 .sh{margin:0 0 2px;font-size:6.2px;letter-spacing:.13em;text-transform:uppercase;color:#6f8380;white-space:nowrap;}
+.ep29 .tk{display:flex;align-items:center;gap:4px;min-width:0;padding:3px 4px;border-radius:5px;background:rgba(255,255,255,.035);font-size:6.8px;color:#a9b8b4;}
+.ep29 .tk i{width:4px;height:4px;border-radius:50%;border:1px solid rgba(255,255,255,.35);flex:0 0 auto;}
+.ep29 .tk.done i{background:#64e0b3;border-color:#64e0b3;}
+.ep29 .tk span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep29 .smini{margin-top:auto;padding-top:5px;border-top:1px solid rgba(255,255,255,.07);}
+.ep29 .smini p{margin:0 0 3px;font-size:5.6px;letter-spacing:.1em;text-transform:uppercase;color:#5f7370;white-space:nowrap;}
+.ep29 .sbars{display:flex;align-items:flex-end;gap:3px;height:22px;}
+.ep29 .sbars i{flex:1;height:var(--h);border-radius:2px;background:rgba(100,224,179,.5);}
+.ep29 .sf{margin:4px 0 0;font-size:5.6px;color:#5f7370;white-space:nowrap;}
+
+/* ================= 02 彩色雾面玻璃 ================= */
+.ep29 .a2{position:relative;display:grid;grid-template-columns:24px minmax(0,1fr);
+  background:
+   radial-gradient(120% 92% at 10% 2%, #ffd2be 0%, rgba(255,210,190,0) 56%),
+   radial-gradient(96% 80% at 92% 0%, #ffe6bb 0%, rgba(255,230,187,0) 62%),
+   radial-gradient(92% 92% at 68% 104%, #d6ebe0 0%, rgba(214,235,224,0) 60%),
+   radial-gradient(58% 46% at 22% 36%, rgba(255,138,104,.55) 0%, rgba(255,138,104,0) 62%),
+   radial-gradient(44% 40% at 78% 22%, rgba(255,196,96,.6) 0%, rgba(255,196,96,0) 60%),
+   radial-gradient(50% 44% at 62% 92%, rgba(120,206,178,.45) 0%, rgba(120,206,178,0) 62%),
+   linear-gradient(158deg,#fbece1,#f7f1e4 52%,#edf3ec);}
+.ep29 .a2::before,.ep29 .a2::after{content:"";position:absolute;border-radius:50%;pointer-events:none;}
+.ep29 .a2::before{left:9%;top:14%;width:74px;height:74px;background:radial-gradient(circle,#ff7d57 0 63%,rgba(255,125,87,0) 67%);opacity:.62;filter:blur(1.4px);}
+.ep29 .a2::after{right:14%;bottom:16%;width:60px;height:60px;background:radial-gradient(circle,#59c79f 0 60%,rgba(89,199,159,0) 65%);opacity:.5;filter:blur(1.4px);}
+.ep29 .r2{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0;}
+.ep29 .dot2{width:9px;height:9px;border-radius:3px;background:rgba(90,64,48,.16);}
+.ep29 .dot2.is-on{background:rgba(90,64,48,.42);}
+.ep29 .g2{position:relative;z-index:1;display:flex;flex-direction:column;gap:5px;padding:6px 7px 7px;min-width:0;}
+.ep29 .gtop{display:grid;grid-template-columns:5fr 7fr;gap:5px;flex:1;min-height:0;}
+.ep29 .glass{position:relative;min-width:0;overflow:hidden;border-radius:10px;padding:6px 7px;
+  background:rgba(255,255,255,.40);border:1px solid rgba(255,255,255,.68);
+  -webkit-backdrop-filter:blur(9px) saturate(1.18);backdrop-filter:blur(9px) saturate(1.18);
+  box-shadow:0 8px 20px -16px rgba(96,64,44,.95), inset 0 1px 0 rgba(255,255,255,.7);color:#3b3129;}
+.ep29 .glass .lb{margin:0;font-size:6.4px;letter-spacing:.08em;text-transform:uppercase;color:#8a7264;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep29 .num{margin-top:2px;font-size:22px;line-height:1;font-weight:640;letter-spacing:-.035em;font-variant-numeric:tabular-nums;color:#33291f;white-space:nowrap;}
+.ep29 .num span{font-size:10px;font-weight:560;letter-spacing:0;margin-left:1px;color:#7b6354;}
+.ep29 .num.sm{font-size:16px;margin-top:1px;}
+.ep29 .gbar{margin-top:auto;height:5px;border-radius:999px;background:rgba(255,255,255,.7);overflow:hidden;}
+.ep29 .gbar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#ef7350,#f6a763);}
+.ep29 .ft{margin:5px 0 0;font-size:6px;color:#8a7264;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep29 .big{display:flex;flex-direction:column;}
+.ep29 .wide{display:flex;flex-direction:column;}
+.ep29 .wh{display:flex;align-items:center;justify-content:space-between;gap:4px;min-width:0;}
+.ep29 .tag2{flex:0 0 auto;padding:1px 5px;border-radius:999px;background:rgba(239,115,80,.16);color:#c6552f;font-size:5.8px;font-variant-numeric:tabular-nums;}
+.ep29 .gbars{display:flex;align-items:flex-end;gap:3px;flex:1;min-height:18px;margin-top:5px;}
+.ep29 .gbars i{flex:1;border-radius:3px 3px 2px 2px;background:#f0906d;height:40%;}
+.ep29 .gbars i:nth-child(2){height:64%;background:#f6b46b;}
+.ep29 .gbars i:nth-child(3){height:50%;background:#8fd3b4;}
+.ep29 .gbars i:nth-child(4){height:78%;background:#f0906d;}
+.ep29 .gbars i:nth-child(5){height:58%;background:#f6b46b;}
+.ep29 .gbars i:nth-child(6){height:88%;background:#8fd3b4;}
+.ep29 .gbars i:nth-child(7){height:70%;background:#f0906d;}
+.ep29 .gbot{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;}
+.ep29 .mini{padding:5px 6px;}
+.ep29 .mini b{display:block;margin-top:2px;font-size:10.5px;font-weight:640;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#33291f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep29 .mini em{display:block;font-style:normal;font-size:5.8px;color:#a0897a;font-variant-numeric:tabular-nums;}
+
+/* ================= 03 大图主视觉 ================= */
+.ep29 .a3{display:flex;flex-direction:column;background:#f7f4ed;}
+.ep29 .hero3{position:relative;flex:1;min-height:0;overflow:hidden;}
+.ep29 .hero3 .art{position:absolute;inset:0;width:100%;height:100%;display:block;}
+.ep29 .hero-eye{position:absolute;top:9px;left:11px;margin:0;font-size:6.2px;letter-spacing:.2em;color:rgba(255,255,255,.9);text-shadow:0 1px 6px rgba(0,0,0,.6);}
+.ep29 .hidx{position:absolute;top:8px;right:11px;font-size:8px;letter-spacing:.14em;color:rgba(255,255,255,.8);text-shadow:0 1px 6px rgba(0,0,0,.55);}
+.ep29 .hero-txt{position:absolute;left:11px;right:11px;bottom:10px;color:#fff;}
+.ep29 .hero-txt h3{margin:0;font-size:19px;line-height:1.1;letter-spacing:-.02em;font-weight:640;text-shadow:0 2px 14px rgba(0,0,0,.35);}
+.ep29 .hmeta{margin:4px 0 0;font-size:6.6px;letter-spacing:.01em;color:rgba(255,255,255,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep29 .hacts{display:flex;gap:5px;margin-top:8px;}
+.ep29 .ha{display:inline-flex;align-items:center;gap:3px;padding:4px 9px;border-radius:999px;border:1px solid transparent;font:inherit;font-size:6.8px;cursor:pointer;
+  transition:transform .24s var(--ease),background .24s var(--ease);}
+.ep29 .ha .ic{width:9px;height:9px;}
+.ep29 .ha.fill{background:#fff;color:#161d18;font-weight:600;}
+.ep29 .ha.ghost{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.4);color:#fff;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.ep29 .ha:hover{transform:translateY(-1px);}
+.ep29 .ha:focus-visible{outline:2px solid #fff;outline-offset:2px;}
+.ep29 .rec3{flex:0 0 auto;padding:7px 10px 9px;background:#fffdf8;border-top:1px solid rgba(20,22,20,.06);}
+.ep29 .rh{display:flex;align-items:baseline;justify-content:space-between;gap:6px;}
+.ep29 .rh b{font-size:8.6px;font-weight:650;color:#1d211d;}
+.ep29 .rh span{font-size:6.2px;color:#9a9d95;}
+.ep29 .rrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:5px;}
+.ep29 .rc{min-width:0;}
+.ep29 .rc .th{display:block;height:24px;border-radius:6px;margin-bottom:3px;}
+.ep29 .th.a{background:linear-gradient(160deg,#b9c7b6,#5c7360);}
+.ep29 .th.b{background:linear-gradient(160deg,#c9bfae,#7a6a55);}
+.ep29 .th.c{background:linear-gradient(160deg,#a8b6c6,#4b5c70);}
+.ep29 .rc b{display:block;font-size:6.8px;font-weight:600;color:#22261f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep29 .rc em{display:block;font-style:normal;font-size:5.9px;color:#9a9d95;white-space:nowrap;}
+
+/* ================= 04 浅色分栏 ================= */
+.ep29 .a4{display:grid;grid-template-columns:34px minmax(0,1fr) 96px;grid-template-rows:minmax(0,1fr);
+  background:linear-gradient(115deg,var(--v4a),var(--v4b) 44%,var(--v4c));color:var(--ink);}
+.ep29 .r4{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 0;border-right:1px solid var(--v4line);}
+.ep29 .av4{display:grid;place-items:center;width:18px;height:18px;border-radius:50%;margin-bottom:3px;flex:0 0 auto;
+  background:linear-gradient(150deg,#c9b6e6,#8f7fc4);color:#fff;font-size:7px;font-weight:650;}
+.ep29 .icbtn4{display:grid;place-items:center;width:22px;height:22px;border:0;border-radius:7px;background:transparent;color:var(--ink3);cursor:pointer;transition:background .24s,color .24s;}
+.ep29 .icbtn4 .ic{width:12px;height:12px;}
+.ep29 .icbtn4:hover{background:var(--soft);color:var(--ink);}
+.ep29 .icbtn4.is-on{background:color-mix(in oklab,var(--ink) 9%,transparent);color:var(--ink);}
+.ep29 .icbtn4:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+.ep29 .m4{display:flex;flex-direction:column;gap:6px;padding:9px 10px;min-width:0;min-height:0;}
+.ep29 .greet{margin:0;font-size:6.6px;color:var(--ink3);white-space:nowrap;}
+.ep29 .big4{margin:0;font-size:18px;line-height:1.14;font-weight:620;letter-spacing:-.035em;}
+.ep29 .p3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;}
+.ep29 .pl{display:block;min-width:0;padding:4px 6px;border-radius:7px;background:rgba(255,255,255,.62);}
+.ep29 .pl i{display:block;font-style:normal;font-size:5.9px;letter-spacing:.02em;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep29 .pl b{display:block;font-size:9.6px;font-weight:640;font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap;}
+.ep29 .pl.a{background:rgba(233,224,250,.85);}
+.ep29 .pl.b{background:rgba(253,240,219,.85);}
+.ep29 .pl.c{background:rgba(226,240,233,.85);}
+[data-theme="dark"] .ep29 .pl{background:rgba(255,255,255,.06);}
+[data-theme="dark"] .ep29 .pl.a{background:rgba(180,160,240,.14);}
+[data-theme="dark"] .ep29 .pl.b{background:rgba(240,200,140,.14);}
+[data-theme="dark"] .ep29 .pl.c{background:rgba(150,210,180,.14);}
+.ep29 .vis4{flex:1;min-height:0;display:flex;flex-direction:column;gap:4px;padding:6px 7px 4px;border-radius:9px;
+  background:var(--v4card);border:1px solid var(--v4line);}
+.ep29 .vh{display:flex;align-items:baseline;justify-content:space-between;gap:5px;min-width:0;}
+.ep29 .vh b{font-size:7.6px;font-weight:640;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep29 .lg{display:inline-flex;align-items:center;gap:3px;flex:0 0 auto;font-size:5.8px;color:var(--ink3);white-space:nowrap;}
+.ep29 .lg i{width:4px;height:4px;border-radius:50%;background:#e39ab5;}
+.ep29 .vchart{flex:1;min-height:0;overflow:hidden;}
+.ep29 .vchart svg{display:block;width:100%;height:100%;}
+.ep29 .area4{opacity:.9;}
+.ep29 .line4{stroke:#d985a6;stroke-width:1.5;vector-effect:non-scaling-stroke;stroke-linecap:round;}
+.ep29 .cal4{display:flex;flex-direction:column;gap:5px;min-height:0;padding:8px 7px;background:var(--v4card);border-left:1px solid var(--v4line);min-width:0;}
+.ep29 .ch{margin:0;font-size:5.9px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);white-space:nowrap;}
+.ep29 .cm{margin:0;font-size:9px;font-weight:600;color:var(--ink);white-space:nowrap;}
+.ep29 .cgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;}
+.ep29 .cw{font-size:5.2px;color:var(--ink4);text-align:center;line-height:1.4;}
+.ep29 .cd{display:grid;place-items:center;aspect-ratio:1;border:0;border-radius:50%;background:transparent;color:var(--ink2);
+  font:inherit;font-size:5.6px;line-height:1;padding:0;cursor:pointer;transition:background .22s,color .22s;}
+.ep29 .cd.has{box-shadow:inset 0 0 0 1px rgba(227,154,181,.7);}
+.ep29 .cd.is-on{background:#e39ab5;color:#fff;}
+.ep29 .cd:hover{background:var(--soft);}
+.ep29 .cd:focus-visible{outline:1.5px solid var(--accent);outline-offset:0;}
+.ep29 .cd.pad{pointer-events:none;}
+.ep29 .clist{display:flex;flex-direction:column;gap:2px;margin-top:auto;padding-top:5px;border-top:1px solid var(--v4line);min-width:0;}
+.ep29 .clist b{font-size:6.2px;font-weight:640;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep29 .clist em{font-style:normal;font-size:5.6px;line-height:1.4;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep29 .clist em.dim{color:var(--ink4);}
+
+/* ================= 05 点阵留白 ================= */
+.ep29 .a5{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:14px 16px;
+  background:
+   radial-gradient(120% 104% at 76% 4%, var(--dm-field1) 0%, transparent 58%),
+   radial-gradient(104% 92% at 10% 96%, var(--dm-field2) 0%, transparent 62%),
+   linear-gradient(152deg,var(--dm-field3),var(--dm-card) 88%);}
+.ep29 .dm-head{width:100%;max-width:340px;}
+.ep29 .dm-head p{margin:0;font-size:6.4px;letter-spacing:.04em;color:var(--ink3);}
+.ep29 .dm-head b{display:block;margin-top:1px;font-size:9.2px;font-weight:600;letter-spacing:-.01em;color:var(--dm-ink);}
+.ep29 .dm-card{width:100%;max-width:340px;padding:13px 14px 10px;border-radius:13px;background:var(--dm-card);color:var(--dm-ink);
+  border:1px solid color-mix(in oklab,var(--dm-ink) 6%,transparent);
+  box-shadow:0 14px 30px -26px rgba(60,50,40,.9), 0 1px 0 rgba(255,255,255,.7) inset;}
+.ep29 .dm-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.ep29 .lb5{margin:0;font-size:7.2px;letter-spacing:.04em;color:color-mix(in oklab,var(--dm-ink) 62%,transparent);}
+.ep29 .live{display:inline-flex;align-items:center;gap:3px;padding:1px 5px;border-radius:999px;font-size:5.4px;letter-spacing:.12em;
+  background:color-mix(in oklab,var(--dm-dot) 22%,transparent);color:color-mix(in oklab,var(--dm-dot) 78%,var(--dm-ink));}
+.ep29 .dm-mid{display:flex;align-items:center;gap:16px;margin:13px 0 10px;}
+.ep29 .dots{display:grid;grid-template-columns:repeat(17,minmax(0,1fr));gap:2px;width:142px;flex:0 0 auto;aspect-ratio:17/7;}
+.ep29 .dots i{display:block;border-radius:50%;background:transparent;}
+.ep29 .dots i.on{background:var(--dm-dot);opacity:.9;}
+.ep29 .dm-meta{min-width:0;}
+.ep29 .dm-meta p{margin:0;font-size:5.8px;letter-spacing:.16em;text-transform:uppercase;color:color-mix(in oklab,var(--dm-ink) 46%,transparent);}
+.ep29 .dm-meta b{display:block;font-size:11px;font-weight:640;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
+.ep29 .dm-meta em{display:block;font-style:normal;font-size:5.8px;color:color-mix(in oklab,var(--dm-ink) 55%,transparent);}
+.ep29 .dm-meta span{display:block;margin-top:5px;font-size:5.6px;letter-spacing:.02em;color:color-mix(in oklab,var(--dm-ink) 40%,transparent);white-space:nowrap;}
+.ep29 .dm-foot{margin:0;padding-top:6px;border-top:1px dashed color-mix(in oklab,var(--dm-ink) 12%,transparent);
+  font-size:5.8px;letter-spacing:.02em;color:color-mix(in oklab,var(--dm-ink) 42%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* ================= 06 胶囊量表 ================= */
+.ep29 .a6{display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--surface2);color:var(--ink);}
+.ep29 .mh{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;}
+.ep29 .mh h3{margin:0;font-size:10px;font-weight:620;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep29 .seg{display:inline-flex;flex:0 0 auto;padding:2px;border-radius:999px;background:color-mix(in oklab,var(--ink) 8%,transparent);}
+.ep29 .seg button{border:0;background:transparent;font:inherit;font-size:6.2px;line-height:1;padding:3px 7px;border-radius:999px;color:var(--ink3);cursor:pointer;transition:background .24s,color .24s;}
+.ep29 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.10);}
+.ep29 .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+.ep29 .mgrid{flex:1;min-height:0;display:grid;grid-template-columns:1.15fr 1.15fr .95fr 1.15fr;gap:6px;}
+.ep29 .mimg{position:relative;border-radius:9px;overflow:hidden;min-height:0;background:#1a1512;}
+.ep29 .mimg svg{position:absolute;inset:0;width:100%;height:100%;display:block;}
+.ep29 .mbadge{position:absolute;top:5px;left:5px;padding:2px 5px;border-radius:999px;background:rgba(0,0,0,.36);color:#fff;
+  font-size:5.4px;letter-spacing:.1em;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+.ep29 .mtx{position:absolute;left:6px;right:6px;bottom:6px;color:#fff;}
+.ep29 .mtx b{display:block;font-size:8.2px;font-weight:600;letter-spacing:-.01em;line-height:1.2;text-shadow:0 1px 8px rgba(0,0,0,.5);}
+.ep29 .mtx em{display:block;font-style:normal;font-size:5.4px;color:rgba(255,255,255,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep29 .mcard{display:flex;flex-direction:column;min-height:0;min-width:0;padding:6px 7px;border-radius:9px;
+  background:var(--surface);border:1px solid var(--line2);}
+.ep29 .lb{margin:0;font-size:6px;letter-spacing:.06em;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep29 .num6{display:flex;align-items:baseline;gap:2px;margin-top:2px;}
+.ep29 .num6 b{font-size:17px;line-height:1;font-weight:640;letter-spacing:-.03em;font-variant-numeric:tabular-nums;}
+.ep29 .num6 span{font-size:7.4px;color:var(--ink3);}
+.ep29 .sub6{margin:2px 0 0;font-size:5.4px;color:var(--ink4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep29 .caps{flex:1;display:flex;align-items:flex-end;gap:4px;min-height:16px;padding-top:4px;}
+.ep29 .caps i{flex:1;height:var(--h);min-height:6px;border-radius:999px;background:var(--ink);opacity:.78;
+  transform-origin:bottom;transition:height .3s var(--ease);}
+.ep29 .caps i:last-child{background:#f05a43;opacity:1;}
+.ep29 .mtimer{align-items:stretch;}
+.ep29 .ring{position:relative;flex:1;min-height:0;display:grid;place-items:center;color:var(--ink);}
+.ep29 .ring svg{width:52px;height:52px;max-width:100%;}
+.ep29 .ring b{position:absolute;font-size:10.5px;font-weight:640;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
+.ep29 .mctl{display:flex;justify-content:center;gap:4px;padding-top:2px;}
+.ep29 .mctl button{display:grid;place-items:center;width:15px;height:15px;padding:0;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink2);cursor:pointer;transition:background .22s;}
+.ep29 .mctl button:hover{background:var(--soft);}
+.ep29 .mctl button:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+.ep29 .mctl .ic{width:8px;height:8px;}
+.ep29 .mdark{display:flex;flex-direction:column;gap:4px;min-height:0;min-width:0;padding:6px 7px;border-radius:9px;background:#121417;color:#f2f0ea;}
+.ep29 .mdh{display:flex;align-items:baseline;justify-content:space-between;gap:5px;}
+.ep29 .mdh span{font-size:6.4px;letter-spacing:.02em;color:rgba(255,255,255,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep29 .mdh b{font-size:7.4px;font-weight:650;color:#f05a43;font-variant-numeric:tabular-nums;flex:0 0 auto;}
+.ep29 .mrows{display:flex;flex-direction:column;gap:3px;min-height:0;overflow:hidden;}
+.ep29 .mrow{display:flex;align-items:center;gap:4px;min-width:0;padding:3px 4px;border:0;border-radius:5px;background:rgba(255,255,255,.06);
+  color:#d8d6d0;font:inherit;font-size:5.9px;text-align:left;cursor:pointer;transition:background .22s,color .22s;}
+.ep29 .mrow i{width:5px;height:5px;border-radius:50%;border:1px solid rgba(255,255,255,.4);flex:0 0 auto;transition:background .22s,border-color .22s;}
+.ep29 .mrow span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ep29 .mrow em{margin-left:auto;font-style:normal;font-size:5.2px;color:rgba(255,255,255,.42);flex:0 0 auto;font-variant-numeric:tabular-nums;}
+.ep29 .mrow[aria-pressed="true"]{color:#fff;}
+.ep29 .mrow[aria-pressed="true"] i{background:#f05a43;border-color:#f05a43;}
+.ep29 .mrow:hover{background:rgba(255,255,255,.11);}
+.ep29 .mrow:focus-visible{outline:1.5px solid #f05a43;outline-offset:1px;}
+
+/* ---------- 入场动画 ---------- */
+.ep29 .view.is-in .line,.ep29 .view.is-in .line4{animation:ep29-draw .9s var(--ease) both;}
+.ep29 .view.is-in .area,.ep29 .view.is-in .area4{animation:ep29-fade .9s var(--ease) both;}
+.ep29 .view.is-in .gbars i{animation:ep29-grow .6s var(--ease) both;}
+.ep29 .view.is-in .gbars i:nth-child(2){animation-delay:.04s}
+.ep29 .view.is-in .gbars i:nth-child(3){animation-delay:.08s}
+.ep29 .view.is-in .gbars i:nth-child(4){animation-delay:.12s}
+.ep29 .view.is-in .gbars i:nth-child(5){animation-delay:.16s}
+.ep29 .view.is-in .gbars i:nth-child(6){animation-delay:.2s}
+.ep29 .view.is-in .gbars i:nth-child(7){animation-delay:.24s}
+@keyframes ep29-draw{from{stroke-dasharray:1;stroke-dashoffset:1}to{stroke-dasharray:1;stroke-dashoffset:0}}
+@keyframes ep29-fade{from{opacity:0}to{opacity:.9}}
+@keyframes ep29-grow{from{height:0;opacity:.3}to{opacity:1}}
+
+/* ---------- 窄屏：真实换栏，不靠缩放 ---------- */
+@media (max-width:620px){
+  .ep29 .stage{height:384px;padding:9px;gap:8px;border-radius:15px;}
+  .ep29 .a1{grid-template-columns:34px minmax(0,1fr) 84px;}
+  .ep29 .m1{padding:7px 8px;gap:5px;}
+  .ep29 .s1{padding:7px 6px;}
+  .ep29 .g2{padding:6px;}
+  .ep29 .m4{padding:8px;}
+  .ep29 .a4{grid-template-columns:30px minmax(0,1fr) 88px;}
+  .ep29 .mgrid{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:5px;}
+  .ep29 .mimg{min-height:0;}
+  .ep29 .mtx b{font-size:7.6px;}
+  .ep29 .a5{padding:11px 12px;}
+  .ep29 .dots{width:124px;gap:2px;}
+}
+@media (max-width:620px){
+  .ep29 .tab .fl{display:none;}
+  .ep29 .tab .fs{display:inline;}
+  .ep29 .tab{padding:0 9px;gap:4px;}
+  .ep29 .tabs{gap:4px;}
+}
+@media (max-width:400px){
+  .ep29 .tab{padding:0 6px;font-size:10.5px;gap:3px;}
+  .ep29 .tab i{font-size:8.5px;margin-right:1px;}
+  .ep29 .a1{grid-template-columns:32px minmax(0,1fr) 78px;}
+  .ep29 .kpi b{font-size:12.5px;}
+  .ep29 .a4{grid-template-columns:28px minmax(0,1fr) 82px;}
+  .ep29 .big4{font-size:16px;}
+  .ep29 .dots{width:112px;}
+  .ep29 .dm-mid{gap:10px;}
+  .ep29 .hero-txt h3{font-size:17px;}
+  .ep29 .stage{height:382px;}
+}
+@container (min-width:560px){
+  /* 宽版：整块面板按 1.5× 放大字号阶梯，保持层级比例不变 */
+  .ep29 .a1{grid-template-columns:50px minmax(0,1fr) 132px;}
+  .ep29 .m1{padding:11px 13px;gap:9px;}
+  .ep29 .eye{font-size:9px;}
+  .ep29 .h1 h3{font-size:15px;}
+  .ep29 .pill1{font-size:9px;padding:3px 8px;}
+  .ep29 .kpis{gap:7px;}
+  .ep29 .kpi{padding:7px 9px;border-radius:10px;}
+  .ep29 .kpi i{font-size:8.6px;}
+  .ep29 .kpi b{font-size:19px;}
+  .ep29 .kpi em{font-size:8.6px;}
+  .ep29 .chart{padding:7px 8px 5px;}
+  .ep29 .xax{font-size:8px;padding-top:3px;}
+  .ep29 .s1{padding:11px 9px;gap:5px;}
+  .ep29 .sh{font-size:8.6px;}
+  .ep29 .tk{font-size:10px;padding:4px 6px;}
+  .ep29 .smini p{font-size:7.8px;}
+  .ep29 .sf{font-size:7.8px;}
+  .ep29 .sbars{height:28px;}
+
+  .ep29 .g2{padding:9px 10px;gap:8px;}
+  .ep29 .gtop{gap:8px;}
+  .ep29 .gbot{gap:8px;}
+  .ep29 .glass{padding:9px 11px;border-radius:12px;}
+  .ep29 .glass .lb{font-size:9px;}
+  .ep29 .num{font-size:34px;}
+  .ep29 .num.sm{font-size:25px;}
+  .ep29 .tag2{font-size:8px;padding:2px 7px;}
+  .ep29 .ft{font-size:8.6px;margin-top:8px;}
+  .ep29 .gbar{height:7px;}
+  .ep29 .mini{padding:8px 9px;border-radius:11px;}
+  .ep29 .mini b{font-size:15px;}
+  .ep29 .mini em{font-size:8.2px;}
+
+  .ep29 .hero-eye{font-size:8.6px;top:12px;left:14px;}
+  .ep29 .hidx{font-size:10px;top:11px;right:14px;}
+  .ep29 .hero-txt{left:14px;right:14px;bottom:12px;}
+  .ep29 .hero-txt h3{font-size:30px;}
+  .ep29 .hmeta{font-size:9.6px;margin-top:6px;}
+  .ep29 .hacts{margin-top:10px;gap:7px;}
+  .ep29 .ha{font-size:9.4px;padding:6px 12px;}
+  .ep29 .ha .ic{width:11px;height:11px;}
+  .ep29 .rec3{padding:9px 13px 11px;}
+  .ep29 .rh b{font-size:11.5px;}
+  .ep29 .rh span{font-size:8.4px;}
+  .ep29 .rrow{gap:10px;margin-top:7px;}
+  .ep29 .rc .th{height:38px;border-radius:8px;margin-bottom:5px;}
+  .ep29 .rc b{font-size:9.4px;}
+  .ep29 .rc em{font-size:8px;}
+
+  .ep29 .a4{grid-template-columns:46px minmax(0,1fr) 138px;}
+  .ep29 .m4{padding:12px 13px;gap:9px;}
+  .ep29 .greet{font-size:9px;}
+  .ep29 .big4{font-size:25px;line-height:1.16;}
+  .ep29 .p3{gap:7px;}
+  .ep29 .pl{padding:6px 8px;border-radius:9px;}
+  .ep29 .pl i{font-size:8px;}
+  .ep29 .pl b{font-size:13px;}
+  .ep29 .vis4{padding:9px 10px 6px;border-radius:11px;}
+  .ep29 .vh b{font-size:10.5px;}
+  .ep29 .lg{font-size:8px;}
+  .ep29 .cal4{padding:11px 9px;gap:6px;}
+  .ep29 .ch{font-size:8px;}
+  .ep29 .cm{font-size:12px;}
+  .ep29 .cgrid{gap:2px;}
+  .ep29 .cw{font-size:6.8px;}
+  .ep29 .cd{font-size:7.6px;}
+  .ep29 .clist b{font-size:8.6px;}
+  .ep29 .clist em{font-size:7.8px;}
+
+  .ep29 .a5{padding:20px 26px;gap:12px;}
+  .ep29 .dm-head p{font-size:9px;}
+  .ep29 .dm-head b{font-size:13px;}
+  .ep29 .dm-head{max-width:470px;}
+  .ep29 .dm-card{max-width:470px;padding:16px 18px 12px;border-radius:15px;}
+  .ep29 .lb5{font-size:10px;}
+  .ep29 .live{font-size:7.4px;padding:2px 7px;}
+  .ep29 .dots{width:200px;gap:3px;}
+  .ep29 .dm-mid{gap:22px;margin:16px 0 12px;}
+  .ep29 .dm-meta p{font-size:8px;}
+  .ep29 .dm-meta b{font-size:15px;}
+  .ep29 .dm-meta em{font-size:8px;}
+  .ep29 .dm-meta span{font-size:7.6px;margin-top:7px;}
+  .ep29 .dm-foot{font-size:7.8px;padding-top:8px;}
+
+  .ep29 .a6{padding:10px;gap:8px;}
+  .ep29 .mh h3{font-size:14px;}
+  .ep29 .seg button{font-size:8.6px;padding:4px 10px;}
+  .ep29 .mgrid{gap:8px;}
+  .ep29 .mcard{padding:9px 10px;border-radius:11px;}
+  .ep29 .mimg{border-radius:11px;}
+  .ep29 .mtx b{font-size:11px;}
+  .ep29 .mtx em{font-size:7.4px;}
+  .ep29 .mbadge{font-size:7px;padding:3px 7px;}
+  .ep29 .lb{font-size:8.4px;}
+  .ep29 .num6 b{font-size:25px;}
+  .ep29 .num6 span{font-size:10px;}
+  .ep29 .sub6{font-size:7.6px;margin-top:3px;}
+  .ep29 .ring svg{width:66px;height:66px;}
+  .ep29 .ring b{font-size:14px;}
+  .ep29 .mctl button{width:20px;height:20px;}
+  .ep29 .mctl .ic{width:10px;height:10px;}
+  .ep29 .mdark{padding:9px 10px;border-radius:11px;gap:5px;}
+  .ep29 .mdh span{font-size:9px;}
+  .ep29 .mdh b{font-size:10px;}
+  .ep29 .mrows{gap:4px;}
+  .ep29 .mrow{font-size:8.4px;padding:4px 6px;border-radius:6px;}
+  .ep29 .mrow em{font-size:7.2px;}
+  .ep29 .caps{gap:6px;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .ep29 *,.ep29 *::before,.ep29 *::after{transition-duration:.001ms !important;animation:none !important;}
+  .ep29 .view{transform:none;}
+  .ep29 .line,.ep29 .line4{stroke-dasharray:none;stroke-dashoffset:0;}
+  .ep29 .caps i{transition:none;}
+}
+</style>
+</head>
+<body>
+<div class="bar"><div class="in">
+  <a class="back" href="index.html"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>索引</a>
+  <span class="crumb">第 29 集 · <b>提升AI审美！6种Dashboard排版</b></span>
+  <span class="sp"></span>
+  <button class="toggle" id="theme"><span>日间</span></button>
+</div></div>
+<div class="stagewrap">
+<section class="demo ep29" data-slug="ep29-dashboard-layout" data-ep="29" data-title="6 种 Dashboard 排版：栏数、卡片比例与视觉层级" data-tags="排版|栅格|视觉层级|Dashboard|卡片比例">
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="ep29-i-chart" viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M7 15l4-5 3 3 5-7"/></symbol>
+    <symbol id="ep29-i-grid" viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></symbol>
+    <symbol id="ep29-i-layers" viewBox="0 0 24 24"><path d="M12 3.5 21 8l-9 4.5L3 8zM3 12.5l9 4.5 9-4.5M3 16.5l9 4.5 9-4.5"/></symbol>
+    <symbol id="ep29-i-cal" viewBox="0 0 24 24"><path d="M4 6.5h16V20H4zM4 10.5h16M8.5 3.6v4M15.5 3.6v4"/></symbol>
+    <symbol id="ep29-i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3.4 2"/></symbol>
+    <symbol id="ep29-i-folder" viewBox="0 0 24 24"><path d="M3.5 7h6l2 2.5h9V19H3.5z"/></symbol>
+    <symbol id="ep29-i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"/><path d="M5 20.2c0-3.5 3.1-5.6 7-5.6s7 2.1 7 5.6"/></symbol>
+    <symbol id="ep29-i-play" viewBox="0 0 24 24"><path d="M8 5.5 18 12 8 18.5z"/></symbol>
+    <symbol id="ep29-i-pause" viewBox="0 0 24 24"><path d="M9 5.5v13M15 5.5v13"/></symbol>
+    <symbol id="ep29-i-stop" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5"/></symbol>
+    <symbol id="ep29-i-cam" viewBox="0 0 24 24"><path d="M3.5 7.5h4l1.6-2.2h5.8L16.5 7.5h4V19h-17z"/><circle cx="12" cy="13" r="3.4"/></symbol>
+  </svg>
+
+  <p class="principle">同一份工作台内容，六次重排：先定「谁当主角」——图表、大图、单一大数字，还是清单——再让栏数、卡片比例和字号阶梯跟着它走。01 用 <b>1 : 2.2 : 1</b> 窄-宽-窄托住折线；02 用 <b>5 : 7</b> 大卡 + 四等分小卡；03 让图片顶到边缘、取消独立顶栏；04 用 <b>34 : 1fr : 96</b> 把日历钉在右侧；05 干脆只留一张卡、其余全是留白；06 再把版心切成 <b>1.15 : 1.15 : 0.95 : 1.15</b> 四栏，让图片、量表、计时器、清单各占一席。</p>
+
+  <div class="stage">
+    <div class="tabs" role="tablist" aria-label="6 种 Dashboard 排版">
+      <button class="tab is-on" id="ep29-t1" role="tab" aria-selected="true" aria-controls="ep29-p1" tabindex="0" data-label="深色三列"><i>01</i><span class="fl">深色三列</span><span class="fs">三列</span></button>
+      <button class="tab" id="ep29-t2" role="tab" aria-selected="false" aria-controls="ep29-p2" tabindex="-1" data-label="雾面玻璃"><i>02</i><span class="fl">雾面玻璃</span><span class="fs">玻璃</span></button>
+      <button class="tab" id="ep29-t3" role="tab" aria-selected="false" aria-controls="ep29-p3" tabindex="-1" data-label="大图主视觉"><i>03</i><span class="fl">大图主视觉</span><span class="fs">大图</span></button>
+      <button class="tab" id="ep29-t4" role="tab" aria-selected="false" aria-controls="ep29-p4" tabindex="-1" data-label="浅色分栏"><i>04</i><span class="fl">浅色分栏</span><span class="fs">分栏</span></button>
+      <button class="tab" id="ep29-t5" role="tab" aria-selected="false" aria-controls="ep29-p5" tabindex="-1" data-label="点阵留白"><i>05</i><span class="fl">点阵留白</span><span class="fs">点阵</span></button>
+      <button class="tab" id="ep29-t6" role="tab" aria-selected="false" aria-controls="ep29-p6" tabindex="-1" data-label="胶囊量表"><i>06</i><span class="fl">胶囊量表</span><span class="fs">胶囊</span></button>
+      <span class="tabcount" aria-hidden="true">01 / 06</span>
+    </div>
+
+    <div class="views">
+      <!-- 01 深色三列：窄 - 宽 - 窄 -->
+      <div class="view v1 is-on" id="ep29-p1" role="tabpanel" aria-labelledby="ep29-t1" data-panel="v1" data-spec="3 栏 · 34 : 1fr : 84 · 主图卡 2.2:1 · 数字 13.5 / 11.5 / 6.6">
+        <div class="app a1">
+          <nav class="r1" aria-label="主导航">
+            <span class="mk"></span>
+            <button class="icbtn is-on" aria-current="true" aria-label="总览"><svg class="ic"><use href="#ep29-i-chart"/></svg></button>
+            <button class="icbtn" aria-label="版块"><svg class="ic"><use href="#ep29-i-grid"/></svg></button>
+            <button class="icbtn" aria-label="图层"><svg class="ic"><use href="#ep29-i-layers"/></svg></button>
+            <button class="icbtn" aria-label="日程"><svg class="ic"><use href="#ep29-i-cal"/></svg></button>
+            <span class="av1">L</span>
+          </nav>
+
+          <div class="m1">
+            <div class="h1">
+              <div><p class="eye">RATES ANALYTICS</p><h3>观看与互动</h3></div>
+              <span class="pill1">This month</span>
+            </div>
+            <div class="kpis" role="group" aria-label="选择指标">
+              <button class="kpi is-on" data-k="0" aria-pressed="true"><i>Views</i><b>6.91k</b><em>+18.2%</em></button>
+              <button class="kpi" data-k="1" aria-pressed="false"><i>Saves</i><b>3.64k</b><em>+9.4%</em></button>
+              <button class="kpi" data-k="2" aria-pressed="false"><i>Clicks</i><b>1.75k</b><em>−2.1%</em></button>
+            </div>
+            <div class="chart">
+              <svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="ep29-g1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#64e0b3" stop-opacity=".40"/>
+                    <stop offset="1" stop-color="#64e0b3" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <path class="area" d="" fill="url(#ep29-g1)"/>
+                <path class="line" pathLength="1" d="" fill="none"/>
+                <circle class="dot" r="1.5" cx="100" cy="10"/>
+              </svg>
+              <div class="xax"><span>JAN</span><span>APR</span><span>JUL</span><span>OCT</span></div>
+            </div>
+          </div>
+
+          <aside class="s1" aria-label="队列">
+            <p class="sh">队列 2/7</p>
+            <div class="tk done"><i></i><span>灯位复核</span></div>
+            <div class="tk done"><i></i><span>白平衡</span></div>
+            <div class="tk"><i></i><span>收音测试</span></div>
+            <div class="tk"><i></i><span>道具就位</span></div>
+            <div class="tk"><i></i><span>监视器校色</span></div>
+            <div class="tk"><i></i><span>灯光预置</span></div>
+            <div class="tk"><i></i><span>麦克风检查</span></div>
+            <div class="smini">
+              <p>本周 setup</p>
+              <div class="sbars"><i style="--h:44%"></i><i style="--h:72%"></i><i style="--h:56%"></i><i style="--h:86%"></i></div>
+            </div>
+            <p class="sf">更新 4 min</p>
+          </aside>
+        </div>
+      </div>
+
+      <!-- 02 彩色雾面玻璃：5:7 大卡 + 四等分 -->
+      <div class="view v2" id="ep29-p2" role="tabpanel" aria-labelledby="ep29-t2" data-panel="v2" data-spec="2 栏 · 5 : 7 大卡 + 4 × 1/4 小卡 · 玻璃 0.40 白 + blur 9 · 数字 22 / 16 / 10.5">
+        <div class="app a2">
+          <div class="r2" aria-hidden="true">
+            <span class="dot2 is-on"></span><span class="dot2"></span><span class="dot2"></span><span class="dot2"></span>
+          </div>
+          <div class="g2">
+            <div class="gtop">
+              <div class="glass big">
+                <p class="lb">In production</p>
+                <div class="num">76.0<span>%</span></div>
+                <div class="gbar"><i style="width:76%"></i></div>
+                <p class="ft">86 个在制任务 · 12 人</p>
+              </div>
+              <div class="glass wide">
+                <div class="wh"><p class="lb">Completed pages</p><span class="tag2">+12%</span></div>
+                <div class="num sm">6,240</div>
+                <div class="gbars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              </div>
+            </div>
+            <div class="gbot">
+              <div class="glass mini"><p class="lb">Manuscripts</p><b>1,118</b><em>−3%</em></div>
+              <div class="glass mini"><p class="lb">In prod.</p><b>850</b><em>+6%</em></div>
+              <div class="glass mini"><p class="lb">Unsched.</p><b>268</b><em>+2%</em></div>
+              <div class="glass mini"><p class="lb">In review</p><b>200</b><em>−1%</em></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 03 大图主视觉：1 栏 + 3 推荐位，无独立顶栏 -->
+      <div class="view v3" id="ep29-p3" role="tabpanel" aria-labelledby="ep29-t3" data-panel="v3" data-spec="1 栏 · Hero : 推荐 ≈ 7 : 3 · 图顶到边缘（无顶栏）· 数字 19 / 8.6 / 6.8">
+        <div class="app a3">
+          <div class="hero3">
+            <svg class="art" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <defs>
+                <linearGradient id="ep29-sky" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#d9e2d6"/><stop offset=".42" stop-color="#cbd3c2"/><stop offset="1" stop-color="#e7ddc2"/>
+                </linearGradient>
+                <radialGradient id="ep29-sun" cx=".72" cy=".34" r=".55">
+                  <stop offset="0" stop-color="#fff3cf" stop-opacity=".95"/><stop offset=".55" stop-color="#ffe7b4" stop-opacity=".5"/><stop offset="1" stop-color="#ffe7b4" stop-opacity="0"/>
+                </radialGradient>
+                <linearGradient id="ep29-ray" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#ffe9b8" stop-opacity=".5"/><stop offset="1" stop-color="#ffe9b8" stop-opacity="0"/>
+                </linearGradient>
+                <linearGradient id="ep29-scrim" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset=".2" stop-color="#0b1410" stop-opacity="0"/>
+                  <stop offset=".6" stop-color="#0b1410" stop-opacity=".34"/>
+                  <stop offset="1" stop-color="#0b1410" stop-opacity=".9"/>
+                </linearGradient>
+                <radialGradient id="ep29-vig" cx=".5" cy=".44" r=".78">
+                  <stop offset=".5" stop-color="#0b1410" stop-opacity="0"/><stop offset="1" stop-color="#0b1410" stop-opacity=".5"/>
+                </radialGradient>
+                <filter id="ep29-b8" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="8"/></filter>
+                <filter id="ep29-b3" x="-15%" y="-15%" width="130%" height="130%"><feGaussianBlur stdDeviation="3"/></filter>
+                <filter id="ep29-b1" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="1.1"/></filter>
+                <filter id="ep29-grain" x="0" y="0" width="100%" height="100%">
+                  <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/>
+                  <feColorMatrix type="saturate" values="0"/>
+                </filter>
+              </defs>
+              <rect width="400" height="200" fill="url(#ep29-sky)"/>
+              <ellipse cx="296" cy="74" rx="82" ry="64" fill="url(#ep29-sun)" filter="url(#ep29-b8)"/>
+              <g filter="url(#ep29-b8)" opacity=".55">
+                <path d="M296 52 206 200 244 200 310 54Z" fill="url(#ep29-ray)"/>
+                <path d="M330 56 288 200 316 200 344 58Z" fill="url(#ep29-ray)" opacity=".55"/>
+                <path d="M262 58 190 200 206 200 274 60Z" fill="url(#ep29-ray)" opacity=".4"/>
+              </g>
+              <path d="M0 118 34 94 58 106 92 80 126 104 160 86 190 108 228 82 262 104 300 90 338 110 372 92 400 104V200H0Z" fill="#a8b6a4" opacity=".7" filter="url(#ep29-b3)"/>
+              <path d="M0 138 40 120 78 133 112 110 150 132 188 116 224 136 266 114 304 133 344 118 400 136V200H0Z" fill="#6c8171" opacity=".92" filter="url(#ep29-b1)"/>
+              <g filter="url(#ep29-b8)">
+                <ellipse cx="132" cy="124" rx="170" ry="12" fill="#eef2e6" opacity=".42"/>
+                <ellipse cx="290" cy="140" rx="140" ry="9" fill="#eef2e6" opacity=".3"/>
+                <ellipse cx="70" cy="152" rx="110" ry="8" fill="#eef2e6" opacity=".22"/>
+              </g>
+              <path d="M0 162 46 148 92 160 138 144 182 160 226 146 272 162 318 148 360 160 400 149V200H0Z" fill="#3b5042"/>
+              <path d="M0 144 L0 139 L4 129 L9 139 L9 139 L14 124 L18 139 L18 140 L22 131 L27 140 L27 140 L32 128 L36 140 L36 141 L40 127 L45 141 L45 141 L50 133 L54 141 L54 142 L58 135 L63 142 L63 142 L68 128 L72 142 L72 143 L76 132 L81 143 L81 143 L86 128 L90 143 L90 143 L94 133 L99 143 L99 143 L104 133 L108 143 L108 143 L112 129 L117 143 L117 143 L122 128 L126 143 L126 143 L130 128 L135 143 L135 143 L140 129 L144 143 L144 143 L148 130 L153 143 L153 143 L158 134 L162 143 L162 142 L166 132 L171 142 L171 142 L176 133 L180 142 L180 141 L184 126 L189 141 L189 141 L194 128 L198 141 L198 140 L202 133 L207 140 L207 139 L212 131 L216 139 L216 139 L220 130 L225 139 L225 139 L230 132 L234 139 L234 139 L238 128 L243 139 L243 138 L248 131 L252 138 L252 137 L256 126 L261 137 L261 137 L266 123 L270 137 L270 136 L274 123 L279 136 L279 136 L284 123 L288 136 L288 135 L292 122 L297 135 L297 135 L302 121 L306 135 L306 135 L310 126 L315 135 L315 135 L320 123 L324 135 L324 135 L328 127 L333 135 L333 135 L338 128 L342 135 L342 135 L346 126 L351 135 L351 135 L356 121 L360 135 L360 135 L364 125 L369 135 L369 135 L374 124 L378 135 L378 136 L382 123 L387 136 L387 136 L392 125 L396 136 L396 137 L400 124 L405 137 L400 200 L0 200 Z" fill="#3f5346" filter="url(#ep29-b1)"/>
+              <path d="M0 163 L0 160 L4 151 L8 160 L8 160 L12 148 L16 160 L16 160 L20 150 L24 160 L24 161 L28 149 L32 161 L32 161 L36 149 L40 161 L40 161 L44 152 L48 161 L48 161 L52 152 L56 161 L56 162 L60 152 L64 162 L64 162 L68 150 L72 162 L72 162 L76 152 L80 162 L80 162 L84 155 L88 162 L88 162 L92 155 L96 162 L96 162 L100 150 L104 162 L104 162 L108 152 L112 162 L112 162 L116 153 L120 162 L120 162 L124 151 L128 162 L128 162 L132 152 L136 162 L136 162 L140 150 L144 162 L144 162 L148 155 L152 162 L152 162 L156 156 L160 162 L160 162 L164 153 L168 162 L168 162 L172 154 L176 162 L176 161 L180 154 L184 161 L184 161 L188 155 L192 161 L192 161 L196 151 L200 161 L200 160 L204 148 L208 160 L208 160 L212 149 L216 160 L216 160 L220 149 L224 160 L224 160 L228 154 L232 160 L232 160 L236 150 L240 160 L240 160 L244 151 L248 160 L248 159 L252 150 L256 159 L256 159 L260 148 L264 159 L264 159 L268 148 L272 159 L272 158 L276 148 L280 158 L280 158 L284 147 L288 158 L288 158 L292 151 L296 158 L296 158 L300 148 L304 158 L304 158 L308 152 L312 158 L312 158 L316 146 L320 158 L320 158 L324 148 L328 158 L328 158 L332 152 L336 158 L336 158 L340 152 L344 158 L344 158 L348 152 L352 158 L352 158 L356 151 L360 158 L360 158 L364 151 L368 158 L368 158 L372 148 L376 158 L376 158 L380 152 L384 158 L384 158 L388 146 L392 158 L392 159 L396 150 L400 159 L400 200 L0 200 Z" fill="#243429"/>
+              <g opacity=".5" filter="url(#ep29-b1)" fill="#d9a441">
+                <circle cx="318" cy="112" r="15"/><circle cx="341" cy="103" r="10"/><circle cx="301" cy="101" r="9"/><circle cx="330" cy="122" r="8"/>
+              </g>
+              <g fill="#16231c">
+                <path d="M-4 200 -2 172 4 180 3 150 10 168 12 142 18 166 20 178 26 200Z"/>
+                <path d="M30 200 34 164 40 174 42 146 48 170 52 158 58 200Z"/>
+                <path d="M62 200 66 178 70 186 73 166 78 184 82 200Z"/>
+                <path d="M330 200 334 160 340 172 343 144 349 168 353 156 359 200Z"/>
+                <path d="M362 200 366 174 371 184 375 160 380 182 384 200Z"/>
+                <path d="M386 200 390 162 396 176 399 152 403 200Z"/>
+              </g>
+              <rect width="400" height="200" filter="url(#ep29-grain)" opacity=".13" style="mix-blend-mode:overlay"/>
+              <rect width="400" height="200" fill="url(#ep29-vig)"/>
+              <rect width="400" height="200" fill="url(#ep29-scrim)"/>
+            </svg>
+            <p class="hero-eye">PODCAST · EP 04</p>
+            <div class="hero-txt">
+              <h3>雾里的归途</h3>
+              <p class="hmeta">Stefano Mandala · 播放 80,342 · 分享 932</p>
+              <div class="hacts">
+                <button class="ha fill"><svg class="ic"><use href="#ep29-i-play"/></svg>立即播放</button>
+                <button class="ha ghost">＋ 稍后</button>
+              </div>
+            </div>
+            <span class="hidx">04</span>
+          </div>
+          <div class="rec3">
+            <div class="rh"><b>推荐</b><span>本周 6 期</span></div>
+            <div class="rrow">
+              <div class="rc"><span class="th a"></span><b>山雾之后</b><em>42 分钟</em></div>
+              <div class="rc"><span class="th b"></span><b>慢船的记录</b><em>28 分钟</em></div>
+              <div class="rc"><span class="th c"></span><b>夜行列车</b><em>36 分钟</em></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 04 浅色分栏：图标轨 + 主内容 + 日历 -->
+      <div class="view v4" id="ep29-p4" role="tabpanel" aria-labelledby="ep29-t4" data-panel="v4" data-spec="3 栏 · 30 : 1fr : 88 · 主列纵向（标题 / 胶囊 / 图表）· 数字 18 / 9.6 / 5.9">
+        <div class="app a4">
+          <nav class="r4" aria-label="主导航">
+            <span class="av4">A</span>
+            <button class="icbtn4 is-on" aria-current="true" aria-label="总览"><svg class="ic"><use href="#ep29-i-grid"/></svg></button>
+            <button class="icbtn4" aria-label="日程"><svg class="ic"><use href="#ep29-i-cal"/></svg></button>
+            <button class="icbtn4" aria-label="文件"><svg class="ic"><use href="#ep29-i-folder"/></svg></button>
+            <button class="icbtn4" aria-label="我的"><svg class="ic"><use href="#ep29-i-user"/></svg></button>
+          </nav>
+          <div class="m4">
+            <p class="greet">Good morning, Alex.</p>
+            <h3 class="big4">Dashboard</h3>
+            <div class="p3">
+              <span class="pl a"><i>Clients</i><b>1,992</b></span>
+              <span class="pl b"><i>Tasks</i><b>43</b></span>
+              <span class="pl c"><i>In talks</i><b>31</b></span>
+            </div>
+            <div class="vis4">
+              <div class="vh"><b>Portfolio visitors</b><span class="lg"><i></i>Websites</span></div>
+              <div class="vchart">
+                <svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+                  <defs><linearGradient id="ep29-g4" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#e39ab5" stop-opacity=".55"/><stop offset="1" stop-color="#e39ab5" stop-opacity="0"/>
+                  </linearGradient></defs>
+                  <path class="area4" d="" fill="url(#ep29-g4)"/>
+                  <path class="line4" pathLength="1" d="" fill="none"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <aside class="cal4" aria-label="日历与日程">
+            <p class="ch">Your schedule</p>
+            <p class="cm">October <b>2026</b></p>
+            <div class="cgrid" role="group" aria-label="选择日期">
+              <span class="cw">M</span><span class="cw">T</span><span class="cw">W</span><span class="cw">T</span><span class="cw">F</span><span class="cw">S</span><span class="cw">S</span>
+              <span class="cd pad"></span><span class="cd pad"></span><span class="cd pad"></span>
+              <button class="cd" data-d="1">1</button><button class="cd" data-d="2">2</button><button class="cd" data-d="3">3</button><button class="cd" data-d="4">4</button>
+              <button class="cd" data-d="5">5</button><button class="cd" data-d="6">6</button><button class="cd" data-d="7">7</button><button class="cd" data-d="8">8</button><button class="cd" data-d="9">9</button><button class="cd" data-d="10">10</button><button class="cd" data-d="11">11</button>
+              <button class="cd" data-d="12">12</button><button class="cd" data-d="13">13</button><button class="cd" data-d="14">14</button><button class="cd" data-d="15">15</button><button class="cd" data-d="16">16</button><button class="cd" data-d="17">17</button><button class="cd" data-d="18">18</button>
+              <button class="cd" data-d="19">19</button><button class="cd" data-d="20">20</button><button class="cd" data-d="21">21</button><button class="cd has" data-d="22">22</button><button class="cd is-on" data-d="23" aria-pressed="true">23</button><button class="cd" data-d="24">24</button><button class="cd" data-d="25">25</button>
+              <button class="cd" data-d="26">26</button><button class="cd" data-d="27">27</button><button class="cd" data-d="28">28</button><button class="cd" data-d="29">29</button><button class="cd" data-d="30">30</button><button class="cd" data-d="31">31</button><span class="cd pad"></span>
+            </div>
+            <div class="clist"><b data-day="23">23 · UI Design</b><em>Project discussion with Jean</em><em class="dim">Dominic · 14:30</em></div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- 05 点阵数字：单卡 + 大留白 -->
+      <div class="view v5" id="ep29-p5" role="tabpanel" aria-labelledby="ep29-t5" data-panel="v5" data-spec="1 栏 · 单卡居中 · 5×7 点阵拼出 185 · 上下留白 ≈ 面板一半">
+        <div class="app a5">
+          <div class="dm-head"><p>Good morning,</p><b>Linnea Caldwell</b></div>
+          <div class="dm-card">
+            <div class="dm-top"><p class="lb5">Air Metrics</p><span class="live">LIVE</span></div>
+            <div class="dm-mid">
+              <span class="dots" data-dots="185" role="img" aria-label="空气质量总量 185"></span>
+              <div class="dm-meta">
+                <p>Total</p><b>185</b><em>Air at home</em>
+                <span>PM2.5 12 µg/m³</span>
+              </div>
+            </div>
+            <p class="dm-foot">静音运行 · 滤芯 82% · 最近 6 小时平均</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 06 胶囊量表：4 栏，亮壳 + 深色清单 -->
+      <div class="view v6" id="ep29-p6" role="tabpanel" aria-labelledby="ep29-t6" data-panel="v6" data-spec="宽屏 4 栏 / 窄屏 2×2 · 1.15 : 1.15 : 0.95 : 1.15 · 胶囊量表 + 弧形计时 + 深色清单">
+        <div class="app a6">
+          <div class="mh">
+            <h3>Welcome in, Stage 03</h3>
+            <div class="seg" role="group" aria-label="时间范围">
+              <button data-range="week" aria-pressed="true">Week</button>
+              <button data-range="day" aria-pressed="false">Day</button>
+            </div>
+          </div>
+          <div class="mgrid">
+            <div class="mimg">
+              <svg viewBox="0 0 120 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                <defs>
+                  <linearGradient id="ep29-tbl" x1="0" y1="0" x2=".6" y2="1">
+                    <stop offset="0" stop-color="#4a382b"/><stop offset="1" stop-color="#15100d"/>
+                  </linearGradient>
+                  <radialGradient id="ep29-lamp" cx=".3" cy=".22" r=".7">
+                    <stop offset="0" stop-color="#ffd9a0" stop-opacity=".55"/><stop offset="1" stop-color="#ffd9a0" stop-opacity="0"/>
+                  </radialGradient>
+                </defs>
+                <rect width="120" height="150" fill="url(#ep29-tbl)"/>
+                <rect width="120" height="150" fill="url(#ep29-lamp)"/>
+                <ellipse cx="62" cy="98" rx="44" ry="27" fill="#efe6d3"/>
+                <ellipse cx="62" cy="96" rx="32" ry="18" fill="#e3d8c1"/>
+                <circle cx="54" cy="92" r="9" fill="#c2772c"/>
+                <circle cx="70" cy="99" r="6" fill="#8f5b28"/>
+                <path d="M74 84c8-6 14-5 18 1-6 4-12 4-18-1z" fill="#5c7a45"/>
+                <path d="M34 108c6 2 10 6 12 10-6 0-10-3-12-10z" fill="#6b8a4f"/>
+                <ellipse cx="62" cy="132" rx="30" ry="6" fill="#0e0b09" opacity=".45"/>
+              </svg>
+              <span class="mbadge">● ROLLING</span>
+              <div class="mtx"><b>秋冬菜单 · 静物</b><em>Stage 03 · Day 2/4</em></div>
+            </div>
+
+            <div class="mcard mhours">
+              <p class="lb">Camera hours</p>
+              <div class="num6"><b data-hours>6.4</b><span>h</span></div>
+              <p class="sub6">开机时长 · 本周日均</p>
+              <div class="caps" aria-hidden="true"><i style="--h:38%"></i><i style="--h:62%"></i><i style="--h:48%"></i><i style="--h:80%"></i><i style="--h:100%"></i></div>
+            </div>
+
+            <div class="mcard mtimer">
+              <p class="lb">Setup timer</p>
+              <div class="ring">
+                <svg viewBox="0 0 60 60" aria-hidden="true">
+                  <circle cx="30" cy="30" r="24" fill="none" stroke="currentColor" stroke-opacity=".14" stroke-width="5" stroke-dasharray="2 4"/>
+                  <circle class="arc" cx="30" cy="30" r="24" fill="none" stroke="#f05a43" stroke-width="5" stroke-linecap="round" stroke-dasharray="151" stroke-dashoffset="108" transform="rotate(-90 30 30)"/>
+                </svg>
+                <b>02:35</b>
+              </div>
+              <div class="mctl">
+                <button aria-label="播放"><svg class="ic"><use href="#ep29-i-play"/></svg></button>
+                <button aria-label="暂停"><svg class="ic"><use href="#ep29-i-pause"/></svg></button>
+                <button aria-label="停止"><svg class="ic"><use href="#ep29-i-stop"/></svg></button>
+              </div>
+            </div>
+
+            <div class="mdark">
+              <div class="mdh"><span>开机前检查</span><b data-count>2/5</b></div>
+              <div class="mrows">
+                <button class="mrow" aria-pressed="true"><i></i><span>灯位复核</span><em>08:30</em></button>
+                <button class="mrow" aria-pressed="true"><i></i><span>白平衡与色卡</span><em>08:50</em></button>
+                <button class="mrow" aria-pressed="false"><i></i><span>收音测试</span><em>09:10</em></button>
+                <button class="mrow" aria-pressed="false"><i></i><span>道具就位</span><em>09:25</em></button>
+                <button class="mrow" aria-pressed="false"><i></i><span>监视器校色</span><em>09:40</em></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="spec" aria-live="polite"><b>01 深色三列</b><span data-spec-text>3 栏 · 34 : 1fr : 84 · 主图卡 2.2:1 · 数字 13.5 / 11.5 / 6.6</span></p>
+</section>
+</div>
+<div class="note">
+  <b>这一集的原则：</b>同一份内容六次重排：先定「谁当主角」，再让栏数、卡片比例、字号阶梯跟着它走。<br>
+  <b>证据帧：</b>六套分别对应 6/18/30/42/54/66 帧；78/90 帧给出窄屏换栏与点阵数字<br>
+  <b>说明：</b>页面上所有交互都是真的（可拖、可按、可切），不是录屏；组件为单文件、无外部依赖。
+  返回<a href="index.html">索引</a>可以看其他集。
+</div>
+<script>
+(function(){
+  var root=document.documentElement, l=document.querySelector('#theme span');
+  function set(t){root.setAttribute('data-theme',t); l.textContent=(t==='dark'?'夜间':'日间');
+    try{localStorage.setItem('il-site-theme',t)}catch(e){}}
+  var s=null; try{s=localStorage.getItem('il-site-theme')}catch(e){}
+  set(s||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  document.getElementById('theme').onclick=function(){set(root.getAttribute('data-theme')==='dark'?'light':'dark')};
+})();
+</script>
+<script>
+
+(function () {
+  var root = document.querySelector('.ep29');
+  if (!root) return;
+  var tabs = Array.prototype.slice.call(root.querySelectorAll('.tab'));
+  var views = Array.prototype.slice.call(root.querySelectorAll('.view'));
+  var specName = root.querySelector('.spec b');
+  var specText = root.querySelector('[data-spec-text]');
+  var tabCount = root.querySelector('.tabcount');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var W = 100, XMAX = 93, TOP = 4, BOT = 37;
+
+  function pts(vals) {
+    var max = Math.max.apply(null, vals) * 1.06;
+    return vals.map(function (v, i) {
+      return [i / (vals.length - 1) * XMAX, BOT - v / max * (BOT - TOP)];
+    });
+  }
+  function curve(p) {
+    var d = 'M' + p[0][0].toFixed(2) + ',' + p[0][1].toFixed(2);
+    for (var i = 1; i < p.length; i++) {
+      var a = p[i - 1], b = p[i], mx = (a[0] + b[0]) / 2;
+      d += 'C' + mx.toFixed(2) + ',' + a[1].toFixed(2) + ' ' + mx.toFixed(2) + ',' + b[1].toFixed(2) + ' ' + b[0].toFixed(2) + ',' + b[1].toFixed(2);
+    }
+    return d;
+  }
+  function draw(svg, vals, lineSel, areaSel) {
+    if (!svg) return;
+    var p = pts(vals), d = curve(p);
+    var line = svg.querySelector(lineSel), area = svg.querySelector(areaSel);
+    if (line) line.setAttribute('d', d);
+    if (area) area.setAttribute('d', d + 'L' + W + ',' + (BOT + 3) + 'L0,' + (BOT + 3) + 'Z');
+    var dot = svg.querySelector('.dot');
+    if (dot) { dot.setAttribute('cx', p[p.length - 1][0]); dot.setAttribute('cy', p[p.length - 1][1]); }
+  }
+
+  var V1 = [
+    [28, 34, 31, 42, 39, 46, 52, 48, 57, 54, 63, 70],
+    [12, 18, 16, 22, 20, 26, 24, 31, 29, 34, 38, 42],
+    [8, 10, 9, 12, 11, 15, 13, 16, 18, 15, 19, 22]
+  ];
+  var V1C = ['#64e0b3', '#eeb267', '#7fb6e8'];
+
+  var v1Svg = root.querySelector('.v1 .chart svg');
+  function paintV1(k) {
+    var svg = v1Svg;
+    draw(svg, V1[k], '.line', '.area');
+    svg.querySelector('.line').style.stroke = V1C[k];
+    var g = svg.querySelector('#ep29-g1 stop');
+    if (g) g.setAttribute('stop-color', V1C[k]);
+    var dot = svg.querySelector('.dot');
+    if (dot) dot.setAttribute('fill', V1C[k]);
+  }
+  paintV1(0);
+
+  draw(root.querySelector('.v4 .vchart svg'), [22, 30, 26, 38, 34, 44, 40, 52, 48, 58, 54, 68], '.line4', '.area4');
+
+  /* ---- 5×7 点阵字模 ---- */
+  var FONT = {
+    '0': ['01110','10001','10011','10101','11001','10001','01110'],
+    '1': ['00100','01100','00100','00100','00100','00100','01110'],
+    '2': ['01110','10001','00001','00010','00100','01000','11111'],
+    '3': ['11110','00001','00001','01110','00001','00001','11110'],
+    '4': ['00010','00110','01010','10010','11111','00010','00010'],
+    '5': ['11111','10000','11110','00001','00001','10001','01110'],
+    '6': ['00110','01000','10000','11110','10001','10001','01110'],
+    '7': ['11111','00001','00010','00100','01000','01000','01000'],
+    '8': ['01110','10001','10001','01110','10001','10001','01110'],
+    '9': ['01110','10001','10001','01111','00001','00010','01100']
+  };
+  function dotMatrix(el) {
+    var str = el.getAttribute('data-dots') || '';
+    var rows = ['', '', '', '', '', '', ''];
+    str.split('').forEach(function (ch, i) {
+      var g = FONT[ch];
+      if (!g) return;
+      for (var r = 0; r < 7; r++) rows[r] += (i ? '0' : '') + g[r];
+    });
+    var frag = document.createDocumentFragment();
+    rows.forEach(function (row) {
+      row.split('').forEach(function (b) {
+        var s = document.createElement('i');
+        if (b === '1') s.className = 'on';
+        frag.appendChild(s);
+      });
+    });
+    el.textContent = '';
+    el.appendChild(frag);
+    el.style.gridTemplateColumns = 'repeat(' + rows[0].length + ',minmax(0,1fr))';
+    el.style.aspectRatio = rows[0].length + '/7';
+  }
+  root.querySelectorAll('[data-dots]').forEach(dotMatrix);
+
+  /* ---- 面板切换 ---- */
+  var current = 0;
+  function show(i) {
+    current = i;
+    tabs.forEach(function (t, j) {
+      var on = j === i;
+      t.classList.toggle('is-on', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+    });
+    views.forEach(function (v, j) {
+      var on = j === i;
+      v.classList.toggle('is-on', on);
+      v.setAttribute('aria-hidden', on ? 'false' : 'true');
+      if ('inert' in v) v.inert = !on;
+      v.classList.remove('is-in');
+      if (on) { void v.offsetWidth; v.classList.add('is-in'); }
+    });
+    var v = views[i];
+    specName.textContent = tabs[i].getAttribute('data-label') || '';
+    specText.textContent = v.getAttribute('data-spec') || '';
+    if (tabCount) tabCount.textContent = ('0' + (i + 1)).slice(-2) + ' / 06';
+    var t = tabs[i];
+    var box = t.parentNode;
+    if (box.scrollWidth > box.clientWidth) {
+      var left = t.offsetLeft - (box.clientWidth - t.offsetWidth) / 2;
+      box.scrollTo({ left: left, behavior: reduce ? 'auto' : 'smooth' });
+    }
+  }
+
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { show(i); });
+    t.addEventListener('keydown', function (e) {
+      var n = null;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') n = (i + 1) % tabs.length;
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') n = (i - 1 + tabs.length) % tabs.length;
+      else if (e.key === 'Home') n = 0;
+      else if (e.key === 'End') n = tabs.length - 1;
+      if (n !== null) { e.preventDefault(); show(n); tabs[n].focus(); }
+    });
+  });
+
+  /* ---- 01：切换指标 → 重画曲线 ---- */
+  var kpis = Array.prototype.slice.call(root.querySelectorAll('.v1 .kpi'));
+  kpis.forEach(function (b, idx) {
+    b.addEventListener('click', function () {
+      kpis.forEach(function (x) { x.classList.toggle('is-on', x === b); x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      paintV1(idx);
+      if (!reduce) { var l = root.querySelector('.v1 .line'); l.style.animation = 'none'; void l.offsetWidth; l.style.animation = ''; }
+    });
+  });
+
+  /* ---- 04：日历选日 ---- */
+  var days = Array.prototype.slice.call(root.querySelectorAll('.v4 .cd[data-d]'));
+  var calTitle = root.querySelector('.v4 .clist b');
+  var PLAN = { '23': ['23 · UI Design', 'Project discussion with Jean', 'Dominic · 14:30'],
+               '22': ['22 · 提案评审', 'Portfolio review with Mara', 'Studio B · 11:00'],
+               '26': ['26 · 内容拍摄', 'Autumn menu still life', 'Stage 03 · 09:30'] };
+  days.forEach(function (d) {
+    d.addEventListener('click', function () {
+      days.forEach(function (x) { x.classList.toggle('is-on', x === d); x.setAttribute('aria-pressed', x === d ? 'true' : 'false'); });
+      var p = PLAN[d.getAttribute('data-d')] || [d.getAttribute('data-d') + ' · 无安排', '空闲 · 可预约拍摄', '—'];
+      calTitle.textContent = p[0];
+      var ems = root.querySelectorAll('.v4 .clist em');
+      if (ems[0]) ems[0].textContent = p[1];
+      if (ems[1]) ems[1].textContent = p[2];
+    });
+  });
+
+  /* ---- 06：周/日切换 + 清单勾选 ---- */
+  var segs = Array.prototype.slice.call(root.querySelectorAll('.v6 .seg button'));
+  var caps = Array.prototype.slice.call(root.querySelectorAll('.v6 .caps i'));
+  var hours = root.querySelector('[data-hours]');
+  var DAY = [30, 55, 40, 70, 88], WEEK = [38, 62, 48, 80, 100];
+  segs.forEach(function (s) {
+    s.addEventListener('click', function () {
+      segs.forEach(function (x) { x.setAttribute('aria-pressed', x === s ? 'true' : 'false'); });
+      var day = s.getAttribute('data-range') === 'day';
+      var vals = day ? DAY : WEEK;
+      caps.forEach(function (c, i) { c.style.setProperty('--h', vals[i] + '%'); });
+      hours.textContent = day ? '0.9' : '6.4';
+    });
+  });
+
+  var rows = Array.prototype.slice.call(root.querySelectorAll('.v6 .mrow'));
+  var count = root.querySelector('[data-count]');
+  rows.forEach(function (r) {
+    r.addEventListener('click', function () {
+      var on = r.getAttribute('aria-pressed') === 'true';
+      r.setAttribute('aria-pressed', on ? 'false' : 'true');
+      var done = rows.filter(function (x) { return x.getAttribute('aria-pressed') === 'true'; }).length;
+      count.textContent = done + '/5';
+    });
+  });
+
+  show(0);
+})();
+
+</script>
+</body>
+</html>

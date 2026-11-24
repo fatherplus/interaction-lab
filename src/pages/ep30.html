@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 30 集 · 6种苹果风毛玻璃交互 — Interaction Lab</title>
+<style>
+:root{--ease:cubic-bezier(.16,1,.3,1);--bg:#f2f2f4;--panel:#fff;--ink:#15161a;
+  --ink-2:rgba(0,0,0,.72);--ink-3:rgba(0,0,0,.42);--line:rgba(0,0,0,.09);
+  --accent:#0071e3;--accent-2:#5ac8fa;--chip:rgba(0,0,0,.05)}
+html[data-theme="dark"]{color-scheme:dark;--bg:#08090c;--panel:#131418;--ink:#f2f3f5;
+  --ink-2:rgba(255,255,255,.74);--ink-3:rgba(255,255,255,.44);--line:rgba(255,255,255,.12);
+  --accent:#2997ff;--accent-2:#64d2ff;--chip:rgba(255,255,255,.08)}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;overflow-x:hidden}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;
+  transition:background .22s linear,color .22s linear}
+.bar{position:sticky;top:0;z-index:90;backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  background:color-mix(in oklab,var(--bg) 82%,transparent);border-bottom:1px solid var(--line)}
+.bar .in{max-width:1240px;margin:0 auto;padding:0 26px;height:54px;display:flex;align-items:center;gap:14px}
+.back{display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--ink-2);font-size:13px}
+.back:hover{color:var(--ink)}
+.back svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.crumb{font-size:13px;color:var(--ink-3)}
+.crumb b{color:var(--ink);font-weight:600}
+.bar .sp{margin-left:auto}
+.toggle{border:1px solid var(--line);background:var(--chip);color:var(--ink);font:inherit;font-size:12.5px;
+  padding:6px 13px;border-radius:999px;cursor:pointer;transition:transform .2s var(--ease)}
+.toggle:hover{transform:translateY(-1px)}
+.stagewrap{max-width:1240px;margin:0 auto;padding:26px 26px 60px}
+.note{max-width:1240px;margin:0 auto;padding:0 26px 40px;color:var(--ink-3);font-size:12.5px;line-height:1.7}
+.note b{color:var(--ink-2)}
+.note a{color:var(--accent);text-decoration:none}
+@media (max-width:700px){.stagewrap{padding:14px 12px 40px} .crumb{display:none}}
+</style>
+<style>
+/* 组件修正：ep26 的模拟侧栏原本写成 position:fixed（原片是静态侧栏），
+   在整页宽下会脱离模拟框，这里强制回到文档流。 */
+.ep26 .rail{position:static!important}
+
+/* ============================================================
+   ep30 · 苹果风毛玻璃交互
+   全部参数取自 ep30 帧（760×1352 竖屏截图，卡片宽 ≈630px）
+   ── 圆角   帧测 65–75px @630 = 5–6% 卡宽   → 等比 22px @334
+   ── 行高   帧测 52–55px（8.2% 卡宽）        → 等比 28–30px，这里取 34 便于触摸
+   ── 行距   帧测 12–14px                     → 等比 8px
+   ── 行圆角 帧测 ≈30% 行高                   → 10px
+   ── 书宽   帧测 ≈11% 卡宽、高宽比 1:1.9–2.4 → 38px 宽 / 74–88 高
+   ── 托板   帧测 ≈58–60% 卡宽                → 192px
+   ── 白雾   帧测视觉提亮 8–12%、白雾 10–15%  → rgba(255,255,255,.46)
+   ── 模糊   帧测 30–40px @630 宽             → 等比 16–21px，取 20px
+   ============================================================ */
+.ep30{
+  --glass-bg: rgba(255,255,255,.46);        /* 帧测：白雾 10–15% */
+  --glass-bg-2: rgba(255,255,255,.30);      /* 内层玻璃（口袋/行条）更通透 */
+  --glass-bd: rgba(255,255,255,.62);        /* 1px 白描边，帧上边缘最亮 */
+  --glass-blur: 20px;
+  --glass-sat: 180%;
+  --radius: 22px;
+
+  --bg-1:#edf3f7; --bg-2:#f6f2ec; --bg-3:#f4eef6;
+  --ink:#14181d; --ink-2:#5a6371; --ink-3:#8d95a3;
+  --btn:#111316; --btn-ink:#fbfcfe;
+  --mint:#6fd6ae; --sky:#7fc0f5; --blush:#f79dbd; --sand:#f6cd85; --lav:#b6a0f0;
+  --chip-1:#ff7a59; --chip-2:#4b5bd6;
+  --grid-c: rgba(23,34,52,.20);
+  --shadow: 0 22px 46px -24px rgba(21,31,46,.48), 0 2px 8px -4px rgba(21,31,46,.16);
+
+  --dur: 340ms;
+  --spring: cubic-bezier(.22,.61,.36,1);
+
+  position: relative;
+  display: block;
+  max-width: 720px;
+  margin: 6px auto 0;
+  font-family: ui-sans-serif,system-ui,-apple-system,"SF Pro Text","Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+.ep30 *{box-sizing:border-box;}
+.ep30 .sprite{position:absolute;width:0;height:0;overflow:hidden;}
+.ep30 .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+
+[data-theme="dark"] .ep30, .ep30[data-theme="dark"]{
+  --glass-bg: rgba(255,255,255,.11);
+  --glass-bg-2: rgba(255,255,255,.07);
+  --glass-bd: rgba(255,255,255,.22);
+  --bg-1:#0b0f15; --bg-2:#121821; --bg-3:#171226;
+  --ink:#eef3f9; --ink-2:#a6b0be; --ink-3:#78828f;
+  --btn:#f2f5fa; --btn-ink:#12151a;
+  --mint:#2b8a6e; --sky:#2c5b98; --blush:#8b3a5b; --sand:#86662c; --lav:#4b3c8a;
+  --chip-1:#c2482f; --chip-2:#33409c;
+  --grid-c: rgba(255,255,255,.11);
+  --shadow: 0 24px 52px -26px rgba(0,0,0,.9), 0 2px 10px -4px rgba(0,0,0,.6);
+}
+.ep30[data-theme="light"]{
+  --glass-bg: rgba(255,255,255,.46); --glass-bg-2: rgba(255,255,255,.30);
+  --glass-bd: rgba(255,255,255,.62);
+  --bg-1:#edf3f7; --bg-2:#f6f2ec; --bg-3:#f4eef6;
+  --ink:#14181d; --ink-2:#5a6371; --ink-3:#8d95a3;
+  --btn:#111316; --btn-ink:#fbfcfe;
+  --mint:#6fd6ae; --sky:#7fc0f5; --blush:#f79dbd; --sand:#f6cd85; --lav:#b6a0f0;
+  --chip-1:#ff7a59; --chip-2:#4b5bd6;
+  --grid-c: rgba(23,34,52,.20);
+}
+
+/* ---------- principle ---------- */
+.ep30 .principle{
+  max-width: 720px; margin: 0 0 12px; padding: 0 2px;
+  font-size: 13px; line-height: 1.74; color: var(--ink-2);
+}
+.ep30 .principle b{color: var(--ink); font-weight: 650;}
+
+/* ---------- stage ---------- */
+.ep30 .stage{
+  position: relative;
+  display: flex; flex-direction: column;
+  gap: 8px;
+  width: 100%; max-width: 720px;
+  height: 404px;                 /* ≤420px */
+  padding: 10px;
+  border-radius: 26px;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(120% 90% at 10% 6%, #e9f5ee 0%, rgba(233,245,238,0) 56%),
+    radial-gradient(110% 90% at 90% 14%, #e4f0fb 0%, rgba(228,240,251,0) 60%),
+    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 52%, var(--bg-3) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.55), 0 24px 60px -40px rgba(17,25,40,.5);
+}
+
+/* 雾化底：硬边色块 + 网格。它们必须压在玻璃下面才有意义——
+   同一条网格线，卡片外（20px 缝隙里）锐利，卡片内糊成奶白，blur 才“被看见”。 */
+.ep30 .bg{position:absolute; inset:0; z-index:0; pointer-events:none;}
+.ep30 .blob{position:absolute; display:block;}
+.ep30 .b1{left:-46px; top:22px; width:156px; height:156px; border-radius:50%;
+  background:radial-gradient(circle at 42% 36%, var(--mint), rgba(111,214,174,0) 70%); opacity:.95;}
+.ep30 .b2{right:-30px; top:44px; width:126px; height:126px; border-radius:24px;
+  background:linear-gradient(150deg, var(--sky), #cbe1fb); opacity:.85; transform:rotate(12deg);}
+.ep30 .b3{left:12px; bottom:-52px; width:180px; height:180px; border-radius:50%;
+  background:linear-gradient(160deg, var(--blush), var(--sand)); opacity:.6;}
+.ep30 .b4{right:22px; bottom:-40px; width:112px; height:112px; border-radius:18px;
+  background:linear-gradient(140deg, var(--lav), #e6dcff); opacity:.75; transform:rotate(-16deg);}
+/* 两块硬边实色块，故意骑在卡片边界上：外半截锐利，内半截被糊开 */
+.ep30 .chip{position:absolute; display:block; transform:rotate(-8deg);}
+.ep30 .c1{left:-8px; top:150px; width:44px; height:44px; border-radius:10px; background:var(--chip-1); opacity:.72;}
+.ep30 .c2{right:-10px; top:96px; width:58px; height:22px; border-radius:4px; background:var(--chip-2); opacity:.6;}
+.ep30 .stripe{position:absolute; left:0; right:0; top:196px; height:12px;
+  background:repeating-linear-gradient(135deg, var(--ink) 0 6px, transparent 6px 13px); opacity:.14;}
+.ep30 .grid{position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg, var(--grid-c) 0 1px, transparent 1px 18px),
+    repeating-linear-gradient(0deg, var(--grid-c) 0 1px, transparent 1px 18px);}
+
+/* ---------- tabs（自身也是玻璃，直接展示 blur） ---------- */
+.ep30 .tabs{
+  position: relative; z-index: 3;
+  display: flex; gap: 6px; flex: 0 0 auto;
+  padding: 3px; border-radius: 999px;
+  background: var(--glass-bg-2);
+  border: 1px solid var(--glass-bd);
+  -webkit-backdrop-filter: blur(14px) saturate(var(--glass-sat));
+  backdrop-filter: blur(14px) saturate(var(--glass-sat));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
+}
+.ep30 .tab{
+  flex: 1 1 0; min-width: 0; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  border: 0; border-radius: 999px; background: transparent;
+  font: inherit; font-size: 11.5px; font-weight: 600; color: var(--ink-2);
+  white-space: nowrap; cursor: pointer;
+  transition: background var(--dur) var(--spring), color 220ms linear;
+}
+.ep30 .tab i{font-style: normal; font-size: 9.5px; font-weight: 700; color: var(--ink-3); letter-spacing: .04em;}
+.ep30 .tab.is-on{background: rgba(255,255,255,.74); color: var(--ink);
+  box-shadow: 0 1px 2px rgba(20,30,44,.10), inset 0 1px 0 rgba(255,255,255,.9);}
+.ep30 .tab.is-on i{color: var(--ink-2);}
+[data-theme="dark"] .ep30 .tab.is-on{background: rgba(255,255,255,.16);}
+.ep30 .tab:focus-visible{outline: 2px solid #5b8cff; outline-offset: 1px;}
+
+/* ---------- panels ---------- */
+.ep30 .panels{position:relative; z-index:2; flex:1 1 auto; min-height:0;}
+.ep30 .panel{position:absolute; inset:0; display:none;}
+.ep30 .panel.is-on{display:block; animation: ep30-in 320ms var(--spring);}
+@keyframes ep30-in{from{opacity:0; transform:translateY(6px) scale(.995);} to{opacity:1; transform:none;}}
+
+/* ---------- 玻璃大卡：四周留 10px 缝隙，让硬边网格在卡外保持锐利 ---------- */
+.ep30 .card{
+  position: absolute; inset: 6px 10px;
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.ep30 .card::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.62), inset 0 -1px 0 rgba(255,255,255,.18);
+}
+.ep30 .glass{
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-bd);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+}
+.ep30 .glass.inner{
+  background: var(--glass-bg-2);
+  -webkit-backdrop-filter: blur(12px) saturate(var(--glass-sat));
+  backdrop-filter: blur(12px) saturate(var(--glass-sat));
+  border: 1px solid rgba(255,255,255,.6);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.85),
+              inset 0 -16px 22px -18px rgba(24,36,52,.5),
+              0 8px 18px -12px rgba(24,36,52,.35);
+}
+
+/* ---------- 卡片头 ---------- */
+.ep30 .hd{display:flex; align-items:flex-start; justify-content:space-between; gap:8px; flex:0 0 auto;}
+.ep30 .ttl{display:flex; flex-direction:column; gap:2px; min-width:0;}
+.ep30 .ttl b{font-size: 13px; font-weight: 680; letter-spacing: -.01em; color: var(--ink);}
+.ep30 .ttl span{font-size: 9.5px; color: var(--ink-3); letter-spacing: .01em;}
+.ep30 .pill{
+  flex: 0 0 auto; height: 18px; padding: 0 7px; margin-top: 1px;
+  display: inline-flex; align-items: center;
+  border-radius: 999px; font-size: 9.5px; font-weight: 700; letter-spacing: .02em;
+  color: var(--ink-2);
+  background: rgba(255,255,255,.55);
+  border: 1px solid rgba(255,255,255,.7);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+  transition: color 220ms linear, background 220ms linear;
+}
+[data-theme="dark"] .ep30 .pill{background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.18);}
+
+/* ---------- scene + footer ---------- */
+.ep30 .scene{position:relative; flex:1 1 auto; min-height:0; margin-top: 5px;}
+.ep30 .done{
+  flex: 0 0 auto; height: 28px; margin-top: 8px;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  border: 0; border-radius: 9px; cursor: pointer;
+  background: var(--btn); color: var(--btn-ink);
+  font: inherit; font-size: 11px; font-weight: 650; letter-spacing: .02em;
+  box-shadow: 0 6px 14px -8px rgba(12,18,28,.7), inset 0 1px 0 rgba(255,255,255,.18);
+  transition: transform 180ms var(--spring), opacity 180ms linear;
+}
+.ep30 .done:hover{opacity:.92;}
+.ep30 .done:active{transform: scale(.985);}
+.ep30 .done .ic{width: 12px; height: 12px; fill:none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;}
+.ep30 .done:focus-visible{outline: 2px solid #5b8cff; outline-offset: 2px;}
+
+/* ================= 01 书籍上架 ================= */
+.ep30 .rail{
+  position:absolute; left:0; top:0; width:192px; height:8px; border-radius:4px;
+  background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(223,231,239,.78));
+  box-shadow: 0 1px 0 rgba(255,255,255,.9), 0 7px 14px -8px rgba(24,36,52,.6);
+  transition: transform var(--dur) var(--spring);
+}
+.ep30 .slot{
+  position:absolute; left:0; top:0; width:38px; height:96px; border-radius: 6px 6px 5px 5px;
+  border: 1px dashed rgba(112,124,140,.46);
+  background: rgba(255,255,255,.14);
+  transition: transform var(--dur) var(--spring), opacity 240ms linear,
+              border-color 220ms linear, background 220ms linear;
+}
+/* 待上架托盘：一条比书脊更靠“前”的玻璃槽口，让散落的书读成“还没上架” */
+.ep30 .tray{
+  position:absolute; left:0; top:0; width:172px; height:18px; border-radius:9px; z-index:15;
+  background: linear-gradient(180deg, rgba(255,255,255,.66), rgba(255,255,255,.36));
+  border: 1px solid rgba(255,255,255,.82);
+  box-shadow: inset 0 4px 8px -5px rgba(24,36,52,.5),
+              inset 0 1px 0 rgba(255,255,255,.95),
+              0 -1px 3px -1px rgba(24,36,52,.18),
+              0 3px 8px -5px rgba(24,36,52,.5);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  transition: transform var(--dur) var(--spring);
+}
+.ep30 .slot.on{opacity:.26; border-color: rgba(112,124,140,.2); background: transparent;}
+.ep30 .slot.aim{border-color: rgba(58,110,240,.8); background: rgba(90,140,255,.16); opacity:1;}
+
+.ep30 .book{
+  position:absolute; left:0; top:0; width:38px; height:78px;
+  cursor: grab; touch-action: none; outline: none;
+  transition: transform var(--dur) var(--spring);
+  will-change: transform;
+}
+.ep30 .book[data-book="0"]{height:78px; --c:#23282d; --inkc:#f2f5f8;}
+.ep30 .book[data-book="1"]{height:88px; --c:#dcd2c1; --inkc:#3d3a33;}
+.ep30 .book[data-book="2"]{height:74px; --c:#a99eb8; --inkc:#fbfaff;}
+.ep30 .book .spine{
+  position: relative; display:flex; align-items:center; justify-content:center;
+  width:100%; height:100%; border-radius: 5px 5px 4px 4px;
+  background: var(--c);
+  transform: rotate(var(--rot,0deg)); transform-origin: 50% 100%;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.4),
+              inset -4px 0 7px -4px rgba(0,0,0,.5),
+              0 10px 16px -12px rgba(20,28,40,.85);
+  transition: transform var(--dur) var(--spring), box-shadow 220ms linear;
+}
+.ep30 .book .spine::before{content:""; position:absolute; left:4px; top:0; bottom:0; width:1px;
+  background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.1));}
+.ep30 .book .spine em{
+  writing-mode: vertical-rl; text-orientation: mixed;
+  font-style: normal; font-size: 8.5px; font-weight: 700; letter-spacing: .18em;
+  color: var(--inkc);
+}
+.ep30 .book.drag{cursor: grabbing; z-index: 20;}
+.ep30 .book.drag .spine{box-shadow: 0 22px 30px -16px rgba(20,28,40,.75), inset 0 1px 0 rgba(255,255,255,.45);}
+.ep30 .book:focus-visible .spine{outline: 2px solid #5b8cff; outline-offset: 3px;}
+
+/* ================= 02 照片收纳 ================= */
+.ep30 .pocket{
+  position:absolute; left:0; top:0; width:192px; height:84px; z-index:6;
+  transition: transform var(--dur) var(--spring);
+}
+.ep30 .pocket-tab{
+  position:absolute; left:-1px; top:-14px; height:15px; padding:0 7px;
+  display:inline-flex; align-items:center; border-radius: 7px 7px 0 0;
+  font-size: 7px; font-style: normal; font-weight: 800; letter-spacing: .12em;
+  color: var(--ink); white-space: nowrap;
+  background: rgba(255,255,255,.5);
+  border: 1px solid rgba(255,255,255,.62); border-bottom: 0;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.ep30 .pocket-body{
+  position:absolute; inset:0; border-radius: 12px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 0 10px; font-size: 9.5px; font-weight: 650; color: var(--ink-2);
+}
+.ep30 .pocket-body .ic{width:12px; height:12px; fill: var(--ink-3);}
+.ep30 .pocket.aim .pocket-body{border-color: rgba(58,110,240,.72);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 0 0 2px rgba(90,140,255,.3);}
+
+.ep30 .photo{
+  position:absolute; left:0; top:0; width:92px; height:98px;
+  cursor: grab; touch-action: none; outline: none; z-index: 10;
+  transition: transform var(--dur) var(--spring), opacity 220ms linear;
+  will-change: transform;
+}
+.ep30 .photo.drag{cursor: grabbing; z-index: 30;}
+.ep30 .photo.drag .sheet{box-shadow: 0 24px 34px -18px rgba(30,40,55,.7), 0 2px 8px -3px rgba(30,40,55,.35);}
+.ep30 .photo .sheet{
+  position:relative; display:block; width:100%; height:100%;
+  padding: 6px 6px 0; border-radius: 5px; background: #fdfdfb;
+  box-shadow: 0 14px 24px -16px rgba(30,40,55,.65), 0 2px 6px -3px rgba(30,40,55,.32);
+}
+/* CSS 假风景：天空 + 光晕 + 地平线/沙丘，全内联，零图片 */
+.ep30 .photo .sheet > i{
+  display:flex; align-items:flex-end; justify-content:center;
+  width:100%; height: 76px; border-radius: 3px; padding-bottom: 5px;
+  font-style: normal; font-size: 6.5px; font-weight: 800; letter-spacing: .14em;
+  color: rgba(255,255,255,.92); text-shadow: 0 1px 2px rgba(0,0,0,.35);
+  overflow: hidden;
+}
+.ep30 .sheet.sky > i{background:
+  radial-gradient(circle at 73% 25%, #fff7e6 0 8%, rgba(255,247,230,0) 9%),
+  radial-gradient(72% 16% at 26% 38%, rgba(255,255,255,.6) 0 62%, rgba(255,255,255,0) 63%),
+  radial-gradient(170% 44% at 50% 106%, #cfa870 0 45%, rgba(207,168,112,0) 46%),
+  linear-gradient(180deg, #97c5e7 0 40%, #cfe3ed 40% 52%, #ecd6ae 52% 66%, #cfa870 66% 100%);}
+.ep30 .sheet.sea > i{background:
+  radial-gradient(58% 48% at 13% 55%, #eef3f1 0 52%, rgba(238,243,241,0) 53%),
+  radial-gradient(96% 11% at 50% 67%, rgba(255,255,255,.4) 0 62%, rgba(255,255,255,0) 63%),
+  linear-gradient(180deg, #a5cbe7 0 34%, #d9e6ea 34% 44%, #638fa9 44% 62%, #2e5b77 62% 100%);}
+.ep30 .sheet.dusk > i{background:
+  radial-gradient(circle at 60% 40%, #ffe2b4 0 12%, rgba(255,226,180,0) 13%),
+  radial-gradient(124% 24% at 50% 54%, rgba(255,255,255,.26) 0 62%, rgba(255,255,255,0) 63%),
+  linear-gradient(180deg, #f7cba2 0 28%, #eea3a3 28% 46%, #b47f8d 46% 64%, #594a63 64% 100%);}
+.ep30 .photo:focus-visible .sheet{outline: 2px solid #5b8cff; outline-offset: 3px;}
+
+/* ================= 03 任务排序 ================= */
+.ep30 .row{
+  position:absolute; left:0; top:0; width:100%; height:34px;
+  display:flex; align-items:center; gap:8px;
+  padding: 0 10px; border-radius: 10px;      /* 帧测：行圆角 ≈30% 行高 */
+  background: rgba(255,255,255,.5);
+  border: 1px solid rgba(255,255,255,.68);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.85), 0 3px 8px -6px rgba(24,36,52,.45);
+  cursor: grab; touch-action: none; outline: none;
+  transition: transform var(--dur) var(--spring), box-shadow 200ms linear, background 200ms linear;
+  will-change: transform;
+}
+[data-theme="dark"] .ep30 .row{background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14);}
+.ep30 .row span{font-size: 11.5px; font-weight: 600; color: var(--ink); letter-spacing: -.005em;
+  white-space: nowrap; overflow:hidden; text-overflow: ellipsis;}
+.ep30 .row .grip{width: 13px; height: 13px; flex: 0 0 auto; fill: var(--ink-3);}
+.ep30 .row.lift{
+  cursor: grabbing; z-index: 12; background: rgba(255,255,255,.74);
+  box-shadow: 0 16px 28px -16px rgba(22,32,48,.66), inset 0 1px 0 rgba(255,255,255,.95);
+}
+[data-theme="dark"] .ep30 .row.lift{background: rgba(255,255,255,.17);}
+.ep30 .row:focus-visible{outline: 2px solid #5b8cff; outline-offset: 2px;}
+
+/* ================= 04 照片叠放 ================= */
+.ep30 .photo.lg{width:118px; height:136px; transition: transform 300ms var(--spring);}
+.ep30 .photo.lg .sheet{box-shadow: 0 20px 30px -16px rgba(38,34,30,.62), 0 2px 6px -3px rgba(38,34,30,.34);}
+.ep30 .photo.lg .sheet > i{height: 100px; font-size: 6.5px;}
+
+@media (max-width: 380px){
+  .ep30 .tab{font-size: 10.5px; gap:3px;}
+  .ep30 .tab i{display:none;}
+}
+@media (prefers-reduced-motion: reduce){
+  .ep30 *{transition-duration: 1ms !important; animation-duration: 1ms !important;}
+  .ep30 .panel.is-on{animation: none;}
+}
+</style>
+</head>
+<body>
+<div class="bar"><div class="in">
+  <a class="back" href="index.html"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>索引</a>
+  <span class="crumb">第 30 集 · <b>6种苹果风毛玻璃交互</b></span>
+  <span class="sp"></span>
+  <button class="toggle" id="theme"><span>日间</span></button>
+</div></div>
+<div class="stagewrap">
+<section class="demo ep30" data-slug="ep30-glass" data-ep="30" data-title="6 种苹果风毛玻璃交互：层次、雾化与拖拽吸附" data-tags="毛玻璃|拖拽吸附|层级|弹簧动效|iOS">
+
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="ep30-i-grip" viewBox="0 0 24 24"><circle cx="9" cy="7" r="1.35"/><circle cx="15" cy="7" r="1.35"/><circle cx="9" cy="12" r="1.35"/><circle cx="15" cy="12" r="1.35"/><circle cx="9" cy="17" r="1.35"/><circle cx="15" cy="17" r="1.35"/></symbol>
+    <symbol id="ep30-i-check" viewBox="0 0 24 24"><path d="M5 12.6 9.6 17 19 7.4"/></symbol>
+    <symbol id="ep30-i-dots" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18" cy="12" r="1.4"/></symbol>
+  </svg>
+
+  <p class="principle">毛玻璃不是「加个模糊」就成立：<b>背后必须有对比</b>——硬边色块、网格线、照片——否则 blur 无事可做。原片 6 个交互里，这 4 个把「拖 → 让位 → 吸附」讲得最清楚，它们共用同一套三层结构：<b>硬边色块/网格底 → 玻璃大卡 → 卡内玻璃条</b>，卡边缘只留 1px 白描边加顶部内高光。能动手的部分全在「拖」：位移只走 <b>transform</b> 跟手，松手用 <b>cubic-bezier(.22,.61,.36,1)</b> 吸附，被挤开的邻居同期让位。</p>
+
+  <div class="stage">
+    <div class="bg" aria-hidden="true">
+      <i class="blob b1"></i>
+      <i class="blob b2"></i>
+      <i class="blob b3"></i>
+      <i class="blob b4"></i>
+      <i class="chip c1"></i>
+      <i class="chip c2"></i>
+      <i class="stripe"></i>
+      <i class="grid"></i>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="毛玻璃交互示例">
+      <button class="tab is-on" id="ep30-t1" role="tab" aria-selected="true" aria-controls="ep30-p1" tabindex="0"><i>01</i>书籍上架</button>
+      <button class="tab" id="ep30-t2" role="tab" aria-selected="false" aria-controls="ep30-p2" tabindex="-1"><i>02</i>照片收纳</button>
+      <button class="tab" id="ep30-t3" role="tab" aria-selected="false" aria-controls="ep30-p3" tabindex="-1"><i>03</i>任务排序</button>
+      <button class="tab" id="ep30-t4" role="tab" aria-selected="false" aria-controls="ep30-p4" tabindex="-1"><i>04</i>照片叠放</button>
+    </div>
+
+    <div class="panels">
+
+      <!-- ================= 01 书籍上架 ================= -->
+      <div class="panel is-on" id="ep30-p1" role="tabpanel" aria-labelledby="ep30-t1">
+        <div class="card glass">
+          <div class="hd">
+            <div class="ttl"><b>Reading room</b><span>拖书脊上架 · 拖回下方取下</span></div>
+            <span class="pill" data-count="shelf">0/3</span>
+          </div>
+          <div class="scene" data-scene="shelf">
+            <i class="rail" aria-hidden="true"></i>
+            <i class="tray" aria-hidden="true"></i>
+            <i class="slot" data-slot="0" aria-hidden="true"></i>
+            <i class="slot" data-slot="1" aria-hidden="true"></i>
+            <i class="slot" data-slot="2" aria-hidden="true"></i>
+            <div class="book" data-book="0" data-h="78" tabindex="0" role="button" aria-label="书 STILL，Enter 上架">
+              <span class="spine"><em>STILL</em></span>
+            </div>
+            <div class="book" data-book="1" data-h="88" tabindex="0" role="button" aria-label="书 PLACES，Enter 上架">
+              <span class="spine"><em>PLACES</em></span>
+            </div>
+            <div class="book" data-book="2" data-h="74" tabindex="0" role="button" aria-label="书 FORM，Enter 上架">
+              <span class="spine"><em>FORM</em></span>
+            </div>
+          </div>
+          <button class="done" data-act="shelf"><svg class="ic"><use href="#ep30-i-check"/></svg>Done</button>
+        </div>
+      </div>
+
+      <!-- ================= 02 照片收纳 ================= -->
+      <div class="panel" id="ep30-p2" role="tabpanel" aria-labelledby="ep30-t2">
+        <div class="card glass">
+          <div class="hd">
+            <div class="ttl"><b>File room</b><span>照片逐渐收进去</span></div>
+            <span class="pill" data-count="pocket">1/3</span>
+          </div>
+          <div class="scene" data-scene="folder">
+            <div class="pocket" aria-hidden="true">
+              <i class="pocket-tab">TRAVEL PHOTOS</i>
+              <i class="pocket-body glass inner">
+                <span data-items>1 item</span>
+                <svg class="ic"><use href="#ep30-i-dots"/></svg>
+              </i>
+            </div>
+            <div class="photo" data-photo="0" tabindex="0" role="button" aria-label="照片 WEEKEND，Enter 收进口袋">
+              <span class="sheet sky"><i>WEEKEND</i></span>
+            </div>
+            <div class="photo" data-photo="1" tabindex="0" role="button" aria-label="照片 COAST，Enter 收进口袋">
+              <span class="sheet sea"><i>COAST</i></span>
+            </div>
+            <div class="photo" data-photo="2" tabindex="0" role="button" aria-label="照片 DUSK，Enter 收进口袋">
+              <span class="sheet dusk"><i>DUSK</i></span>
+            </div>
+          </div>
+          <button class="done" data-act="folder"><svg class="ic"><use href="#ep30-i-check"/></svg>Done</button>
+        </div>
+      </div>
+
+      <!-- ================= 03 任务排序 ================= -->
+      <div class="panel" id="ep30-p3" role="tabpanel" aria-labelledby="ep30-t3">
+        <div class="card glass">
+          <div class="hd">
+            <div class="ttl"><b>Today's list</b><span>拖左侧把手排序 · 松手吸附</span></div>
+            <span class="pill" data-count="tasks">5</span>
+          </div>
+          <div class="scene" data-scene="tasks">
+            <div class="row" data-row="0" tabindex="0" role="button" aria-label="任务 Pick a direction，上下键移动">
+              <svg class="grip"><use href="#ep30-i-grip"/></svg><span>Pick a direction</span>
+            </div>
+            <div class="row" data-row="1" tabindex="0" role="button" aria-label="任务 Share with team，上下键移动">
+              <svg class="grip"><use href="#ep30-i-grip"/></svg><span>Share with team</span>
+            </div>
+            <div class="row" data-row="2" tabindex="0" role="button" aria-label="任务 Make a moodboard，上下键移动">
+              <svg class="grip"><use href="#ep30-i-grip"/></svg><span>Make a moodboard</span>
+            </div>
+            <div class="row" data-row="3" tabindex="0" role="button" aria-label="任务 Book the studio，上下键移动">
+              <svg class="grip"><use href="#ep30-i-grip"/></svg><span>Book the studio</span>
+            </div>
+            <div class="row" data-row="4" tabindex="0" role="button" aria-label="任务 Send the recap，上下键移动">
+              <svg class="grip"><use href="#ep30-i-grip"/></svg><span>Send the recap</span>
+            </div>
+          </div>
+          <button class="done" data-act="tasks"><svg class="ic"><use href="#ep30-i-check"/></svg>Done</button>
+        </div>
+      </div>
+
+      <!-- ================= 04 照片叠放 ================= -->
+      <div class="panel" id="ep30-p4" role="tabpanel" aria-labelledby="ep30-t4">
+        <div class="card glass">
+          <div class="hd">
+            <div class="ttl"><b>Memory box</b><span>横向拖顶层照片 → 收拢 / 展开</span></div>
+            <span class="pill" data-stack>叠放</span>
+          </div>
+          <div class="scene" data-scene="stack">
+            <div class="photo lg" data-lay="0" tabindex="0" role="button" aria-label="照片 COAST 2025，左右键展开">
+              <span class="sheet sea"><i>COAST · 2025</i></span>
+            </div>
+            <div class="photo lg" data-lay="1" tabindex="0" role="button" aria-label="照片 DUSK 2025，左右键展开">
+              <span class="sheet dusk"><i>DUSK · 2025</i></span>
+            </div>
+            <div class="photo lg" data-lay="2" tabindex="0" role="button" aria-label="照片 WEEKEND 2026，左右键展开">
+              <span class="sheet sky"><i>WEEKEND · 2026</i></span>
+            </div>
+          </div>
+          <button class="done" data-act="stack"><svg class="ic"><use href="#ep30-i-check"/></svg>Done</button>
+        </div>
+      </div>
+
+    </div>
+    <p class="sr" aria-live="polite" data-live></p>
+  </div>
+</section>
+</div>
+<div class="note">
+  <b>这一集的原则：</b>毛玻璃不是加个模糊就成立——背后必须有硬边对比，否则 blur 无事可做；交互全部落在「拖」，松手按命中槽吸附。<br>
+  <b>证据帧：</b>18.jpg 书籍上架；30.jpg 照片收纳（只在袋口露一条）；54/66.jpg 任务排序让位；78.jpg 照片叠放拍立得白边；42.jpg 玻璃行条；90.jpg 跨栏移卡<br>
+  <b>说明：</b>页面上所有交互都是真的（可拖、可按、可切），不是录屏；组件为单文件、无外部依赖。
+  返回<a href="index.html">索引</a>可以看其他集。
+</div>
+<script>
+(function(){
+  var root=document.documentElement, l=document.querySelector('#theme span');
+  function set(t){root.setAttribute('data-theme',t); l.textContent=(t==='dark'?'夜间':'日间');
+    try{localStorage.setItem('il-site-theme',t)}catch(e){}}
+  var s=null; try{s=localStorage.getItem('il-site-theme')}catch(e){}
+  set(s||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  document.getElementById('theme').onclick=function(){set(root.getAttribute('data-theme')==='dark'?'light':'dark')};
+})();
+</script>
+<script>
+
+(function () {
+  "use strict";
+  var root = (document.currentScript && document.currentScript.closest) ? document.currentScript.closest(".ep30") : null;
+  if (!root) root = document.querySelector(".ep30");
+  if (!root) return;
+
+  var MQ = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var EASE = "cubic-bezier(.22,.61,.36,1)";
+  var DUR = 340;
+  function ms() { return MQ.matches ? 0 : DUR; }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  var live = root.querySelector("[data-live]");
+  function say(t) { if (live) live.textContent = t; }
+  function pos(el) {
+    var m = /translate3d\(\s*(-?[\d.]+)px,\s*(-?[\d.]+)px/.exec(el.style.transform || "");
+    return { x: m ? +m[1] : 0, y: m ? +m[2] : 0 };
+  }
+
+  /* ---------- tabs ---------- */
+  var tabs = [].slice.call(root.querySelectorAll(".tab"));
+  var panels = [].slice.call(root.querySelectorAll(".panel"));
+  var layouts = [];
+  function show(i, focus) {
+    tabs.forEach(function (t, k) {
+      var on = k === i;
+      t.classList.toggle("is-on", on);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
+      if (on && focus) t.focus();
+    });
+    panels.forEach(function (p, k) { p.classList.toggle("is-on", k === i); });
+    layouts.forEach(function (f) { f(false); });   /* display 切换后同步量尺寸，避免首帧跳到 0 宽的位置 */
+    requestAnimationFrame(function () { layouts.forEach(function (f) { f(false); }); });
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener("click", function () { show(i); });
+    t.addEventListener("keydown", function (e) {
+      var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      show((i + d + tabs.length) % tabs.length, true);
+    });
+  });
+
+  /* ---------- 拖拽引擎：位移只走 transform，松手交给各面板吸附 ---------- */
+  function draggable(el, cfg) {
+    el.addEventListener("pointerdown", function (e) {
+      if (e.button !== undefined && e.button !== 0) return;
+      if (cfg.start(e) === false) return;
+      e.preventDefault();
+      try { el.setPointerCapture(e.pointerId); } catch (err) {}
+      el.classList.add("drag");
+      var sx = e.clientX, sy = e.clientY, moved = false;
+      function onMove(ev) {
+        var dx = ev.clientX - sx, dy = ev.clientY - sy;
+        if (!moved && Math.abs(dx) + Math.abs(dy) > 2) moved = true;
+        cfg.move(dx, dy, ev);
+      }
+      function onUp(ev) {
+        el.removeEventListener("pointermove", onMove);
+        el.removeEventListener("pointerup", onUp);
+        el.removeEventListener("pointercancel", onUp);
+        el.classList.remove("drag");
+        try { el.releasePointerCapture(ev.pointerId); } catch (err) {}
+        cfg.end(ev.clientX - sx, ev.clientY - sy, moved);
+      }
+      el.addEventListener("pointermove", onMove);
+      el.addEventListener("pointerup", onUp);
+      el.addEventListener("pointercancel", onUp);
+    });
+  }
+
+  /* =====================================================================
+     01 书籍上架
+     帧测：书宽 ≈11% 卡宽、中本最高（高宽比 1:2.4）、书缝 1.3–2.3% 卡宽、
+           托板 ≈58–60% 卡宽 / 厚 ≈1% 卡宽
+     ===================================================================== */
+  var resetShelf;
+  function initShelf() {
+    var sc = root.querySelector('[data-scene="shelf"]');
+    var books = [].slice.call(sc.querySelectorAll(".book"));
+    var slots = [].slice.call(sc.querySelectorAll(".slot"));
+    var rail = sc.querySelector(".rail");
+    var tray = sc.querySelector(".tray");
+    var pill = root.querySelector('[data-count="shelf"]');
+    var TRAY_ROT = [-4, 2, 5];
+    var state = { shelf: [null, null, null], tray: [0, 1, 2] };
+    var W = 300, H = 240;
+
+    function geom() {
+      W = sc.clientWidth; H = sc.clientHeight;
+      var railY = Math.round(H * 0.52);
+      return { railY: railY, pitch: clamp(Math.round(W * 0.147), 42, 50),
+               cx: W / 2, floor: H, slotH: 96 };
+    }
+    function bookX(g, i) { return g.cx + (i - 1) * g.pitch - 19; }
+
+    function layout(anim) {
+      var g = geom();
+      var t = anim === false ? "none" : "transform " + ms() + "ms " + EASE;
+      rail.style.transition = t;
+      var tw = g.pitch * 3 + 26;
+      rail.style.width = tw + "px";
+      rail.style.transform = "translate3d(" + (g.cx - tw / 2) + "px," + g.railY + "px,0)";
+      tray.style.transition = t;
+      tray.style.width = tw + "px";
+      tray.style.transform = "translate3d(" + (g.cx - tw / 2) + "px," + (g.floor - 18) + "px,0)";
+      slots.forEach(function (s, i) {
+        s.style.transition = t;
+        s.style.transform = "translate3d(" + bookX(g, i) + "px," + (g.railY - g.slotH - 1) + "px,0)";
+        s.classList.toggle("on", state.shelf[i] !== null);
+      });
+      books.forEach(function (b, i) {
+        var h = +b.dataset.h, si = state.shelf.indexOf(i), x, y, rot;
+        if (si > -1) { x = bookX(g, si); y = g.railY - h; rot = 0; }
+        else {
+          var k = state.tray.indexOf(i);
+          x = g.cx + (k - (state.tray.length - 1) / 2) * g.pitch - 19;
+          y = g.floor - h - 8;                   /* 待上架：立在下方托盘里 */
+          rot = TRAY_ROT[k % 3];
+        }
+        b.style.transition = t;
+        b.style.transform = "translate3d(" + x + "px," + y + "px,0)";
+        b.querySelector(".spine").style.setProperty("--rot", rot + "deg");
+      });
+      pill.textContent = state.shelf.filter(function (v) { return v !== null; }).length + "/3";
+    }
+
+    function place(i, slot) {
+      state.shelf = state.shelf.map(function (v) { return v === i ? null : v; });
+      var t = state.tray.indexOf(i); if (t > -1) state.tray.splice(t, 1);
+      if (slot > -1) { state.shelf[slot] = i; say("第 " + (slot + 1) + " 格上架"); }
+      else { state.tray.push(i); say("取下，回到待上架"); }
+      layout(true);
+    }
+
+    books.forEach(function (b, i) {
+      var sx = 0, sy = 0;
+      draggable(b, {
+        start: function () {
+          var p0 = pos(b);
+          sx = p0.x; sy = p0.y;
+          b.style.transition = "none";
+          b.querySelector(".spine").style.setProperty("--rot", "-2deg");
+          return true;
+        },
+        move: function (dx, dy) {
+          var h = +b.dataset.h;
+          var x = clamp(sx + dx, -6, W - 32);
+          var y = clamp(sy + dy, -10, H - h);
+          b.style.transform = "translate3d(" + x + "px," + y + "px,0)";
+          slots.forEach(function (s) {
+            var r = s.getBoundingClientRect(), br = b.getBoundingClientRect();
+            var near = Math.abs((r.left + r.width / 2) - (br.left + br.width / 2)) < 32 &&
+                       (br.top + br.height) < r.top + r.height * 0.92;
+            s.classList.toggle("aim", near);
+          });
+        },
+        end: function (dx, dy, moved) {
+          slots.forEach(function (s) { s.classList.remove("aim"); });
+          if (!moved) { layout(true); return; }
+          var g = geom(), sr = sc.getBoundingClientRect(), cur = b.getBoundingClientRect();
+          var bottom = cur.bottom - sr.top, cxm = cur.left + cur.width / 2 - sr.left;
+          var slot = -1;
+          if (bottom < g.railY + 40) {
+            var best = 1e9;
+            for (var k = 0; k < 3; k++) {
+              var d = Math.abs(cxm - (g.cx + (k - 1) * g.pitch));
+              if (d < best) { best = d; slot = k; }
+            }
+            var occ = state.shelf[slot];
+            if (occ !== null && occ !== i) { state.shelf[slot] = null; state.tray.push(occ); }
+          }
+          place(i, slot);
+        }
+      });
+
+      b.addEventListener("keydown", function (e) {
+        var si = state.shelf.indexOf(i);
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          if (si > -1) place(i, -1);
+          else {
+            var free = state.shelf.indexOf(null);
+            place(i, free > -1 ? free : 0);
+          }
+        } else if (e.key === "ArrowUp" && si < 0) {
+          e.preventDefault();
+          var f = state.shelf.indexOf(null);
+          place(i, f > -1 ? f : 0);
+        } else if (e.key === "ArrowDown" && si > -1) {
+          e.preventDefault(); place(i, -1);
+        } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+          e.preventDefault();
+          var dir = e.key === "ArrowRight" ? 1 : -1;
+          if (si > -1) {
+            var to = clamp(si + dir, 0, 2), occ2 = state.shelf[to];
+            state.shelf[si] = occ2; state.shelf[to] = i;
+            layout(true); say("换到第 " + (to + 1) + " 格");
+          } else {
+            var idx = state.tray.indexOf(i), local = clamp(idx + dir, 0, state.tray.length - 1);
+            state.tray.splice(idx, 1); state.tray.splice(local, 0, i);
+            layout(true);
+          }
+        }
+      });
+    });
+
+    resetShelf = function () { state.shelf = [null, null, null]; state.tray = [0, 1, 2]; layout(true); say("已复位"); };
+    layouts.push(layout);
+    layout(false);
+  }
+
+  /* =====================================================================
+     02 照片收纳
+     帧测：口袋 ≈45% 卡宽、只在袋口露出约 22% 袋高的照片条、
+           前袋（35–50% 白）比后层（15–25% 白）更白更浑浊
+     ===================================================================== */
+  var resetFolder;
+  function initFolder() {
+    var sc = root.querySelector('[data-scene="folder"]');
+    var photos = [].slice.call(sc.querySelectorAll(".photo"));
+    var pocket = sc.querySelector(".pocket");
+    var items = sc.querySelector("[data-items]");
+    var pill = root.querySelector('[data-count="pocket"]');
+    var ROT = [-7, 5, 10];
+    var inPocket = [2];
+    var W = 300, H = 240;
+
+    function layout(anim) {
+      W = sc.clientWidth; H = sc.clientHeight;
+      var lipY = H - 84, cx = W / 2;
+      var t = anim === false ? "none" : "transform " + ms() + "ms " + EASE;
+      pocket.style.transition = t;
+      pocket.style.transform = "translate3d(" + (cx - 96) + "px," + lipY + "px,0)";
+      photos.forEach(function (p, i) {
+        var k = inPocket.indexOf(i), x, y, rot, z;
+        if (k > -1) {
+          x = cx + 2 + k * 6; y = lipY - 30 + k * 4; rot = -2 + k * 4; z = 4 + k;
+        } else {
+          var loose = photos.filter(function (_, j) { return inPocket.indexOf(j) < 0; });
+          var li = loose.indexOf(p), n = loose.length || 1;
+          var gap = n > 1 ? Math.min(78, Math.max(46, (W - 116) / (n - 1))) : 0;
+          x = cx - ((n - 1) * gap + 92) / 2 + li * gap;
+          y = 2 + (li ? 8 : 0);
+          rot = ROT[i]; z = 10 + i;
+        }
+        p.style.transition = t;
+        p.style.zIndex = z;
+        p.style.transform = "translate3d(" + x + "px," + y + "px,0) rotate(" + rot + "deg)";
+      });
+      items.textContent = inPocket.length === 1 ? "1 item" : inPocket.length + " items";
+      pill.textContent = inPocket.length + "/3";
+    }
+    function toPocket(i) {
+      if (inPocket.indexOf(i) > -1) return;
+      inPocket.push(i); layout(true);
+      say(inPocket.length + " 张已收进");
+    }
+    function toFan(i) {
+      var k = inPocket.indexOf(i);
+      if (k < 0) return;
+      inPocket.splice(k, 1); layout(true); say("取出一张");
+    }
+
+    photos.forEach(function (p, i) {
+      var sx = 0, sy = 0;
+      draggable(p, {
+        start: function () {
+          var p0 = pos(p);
+          sx = p0.x; sy = p0.y;
+          p.style.transition = "none"; p.style.zIndex = 30;
+          return true;
+        },
+        move: function (dx, dy) {
+          var x = clamp(sx + dx, -16, W - 76);
+          var y = clamp(sy + dy, -12, H - 70);
+          p.style.transform = "translate3d(" + x + "px," + y + "px,0) rotate(" + (ROT[i] * 0) + "deg)";
+          var pr = pocket.getBoundingClientRect(), br = p.getBoundingClientRect();
+          pocket.classList.toggle("aim",
+            br.right > pr.left - 16 && br.left < pr.right + 16 && br.bottom > pr.top - 22);
+        },
+        end: function (dx, dy, moved) {
+          pocket.classList.remove("aim");
+          if (!moved) { layout(true); return; }
+          var pr = pocket.getBoundingClientRect(), br = p.getBoundingClientRect();
+          var hit = br.right > pr.left - 16 && br.left < pr.right + 16 && br.bottom > pr.top - 22;
+          if (hit) toPocket(i); else toFan(i);
+          layout(true);
+        }
+      });
+
+      p.addEventListener("keydown", function (e) {
+        var k = inPocket.indexOf(i);
+        if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") { e.preventDefault(); toPocket(i); }
+        else if (e.key === "ArrowUp") { e.preventDefault(); toFan(i); }
+        else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+          e.preventDefault();
+          var dir = e.key === "ArrowRight" ? 1 : -1;
+          photos[clamp(i + dir, 0, 2)].focus();
+        }
+      });
+    });
+
+    resetFolder = function () { inPocket = []; layout(true); say("口袋已清空"); };
+    layouts.push(layout);
+    layout(false);
+  }
+
+  /* =====================================================================
+     03 任务排序：按住把手 → 邻居让位 → 松手吸附
+     帧测：行高 52–55px @630 卡宽 → 34px @306；行距 12–14px → 8px
+     ===================================================================== */
+  var resetTasks;
+  function initTasks() {
+    var sc = root.querySelector('[data-scene="tasks"]');
+    var rows = [].slice.call(sc.querySelectorAll(".row"));
+    var order = [0, 1, 2, 3, 4];
+    var RH = 34, GAP = 8, pitch = RH + GAP, W = 300;
+
+    function layout(anim, skip) {
+      var t = anim === false ? "none" : "transform " + ms() + "ms " + EASE;
+      W = sc.clientWidth;
+      order.forEach(function (ri, idx) {
+        var r = rows[ri];
+        r.style.width = W + "px";
+        if (skip === r) return;
+        r.style.transition = t;
+        r.style.transform = "translate3d(0," + (idx * pitch) + "px,0)";
+      });
+    }
+
+    rows.forEach(function (r, base) {
+      var startY = 0;
+      draggable(r, {
+        start: function () {
+          startY = order.indexOf(base) * pitch;
+          r.style.transition = "none";
+          r.classList.add("lift");
+          return true;
+        },
+        move: function (dx, dy) {
+          var y = clamp(startY + dy, 0, (order.length - 1) * pitch);
+          r.style.transform = "translate3d(0," + y + "px,0)";
+          var target = clamp(Math.round(y / pitch), 0, order.length - 1);
+          var cur = order.indexOf(base);
+          if (target !== cur) {
+            order.splice(cur, 1);
+            order.splice(target, 0, base);
+            layout(true, r);
+          }
+        },
+        end: function () {
+          r.classList.remove("lift");
+          layout(true);
+          say("已移到第 " + (order.indexOf(base) + 1) + " 位");
+        }
+      });
+
+      r.addEventListener("keydown", function (e) {
+        var cur = order.indexOf(base);
+        var d = e.key === "ArrowDown" ? 1 : e.key === "ArrowUp" ? -1 : 0;
+        if (!d) return;
+        e.preventDefault();
+        var to = clamp(cur + d, 0, order.length - 1);
+        if (to === cur) return;
+        order.splice(cur, 1); order.splice(to, 0, base);
+        layout(true); r.focus();
+        say("第 " + (to + 1) + " 位");
+      });
+    });
+
+    resetTasks = function () { order = [0, 1, 2, 3, 4]; layout(true); say("顺序已复位"); };
+    layouts.push(layout);
+    layout(false);
+  }
+
+  /* =====================================================================
+     04 照片叠放：横向拖顶层照片 → 可擦洗的 0→1 展开进度
+     ===================================================================== */
+  var resetStack, stackState;
+  function initStack() {
+    var sc = root.querySelector('[data-scene="stack"]');
+    var cards = [].slice.call(sc.querySelectorAll(".photo.lg"));
+    var pill = root.querySelector("[data-stack]");
+    var open = 0;
+    var STACK = [{ x: -8, y: 6, r: -4.5 }, { x: 2, y: 1, r: 1.5 }, { x: 10, y: 8, r: 6 }];
+    var FAN = [{ x: -1, y: 10, r: -10 }, { x: 0, y: -8, r: 0 }, { x: 1, y: 10, r: 10 }];
+
+    function ease(p) { return p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; }
+
+    function layout(anim) {
+      var W = sc.clientWidth, H = sc.clientHeight;
+      var p = ease(clamp(open, 0, 1));
+      var cx = W / 2 - 59, cy = Math.max(8, (H - 136) / 2 - 4);
+      var fx = Math.min(64, Math.max(34, (W - 118) / 2 - 8));   /* 窄屏自动收窄展开间距 */
+      var t = anim === false ? "none" : "transform 300ms " + EASE;
+      cards.forEach(function (c, i) {
+        var a = STACK[i], b = FAN[i];
+        var bx = FAN[i].x * fx;
+        c.style.transition = t;
+        c.style.zIndex = 10 + i;
+        c.style.transform = "translate3d(" + (cx + a.x + (bx - a.x) * p) + "px," +
+          (cy + a.y + (b.y - a.y) * p) + "px,0) rotate(" + (a.r + (b.r - a.r) * p) + "deg)";
+      });
+      pill.textContent = open > 0.5 ? "展开" : "叠放";
+    }
+
+    var top = cards[2];
+    draggable(top, {
+      start: function () { top.style.transition = "none"; return true; },
+      move: function (dx) { open = clamp(open + dx / 150, 0, 1); layout(false); },
+      end: function (dx) {
+        var target = open > 0.5 ? 1 : 0;
+        if (Math.abs(dx) < 6) target = open > 0.5 ? 0 : 1;
+        open = target;
+        layout(true);
+        say(open ? "展开" : "收拢");
+      }
+    });
+
+    cards.forEach(function (c) {
+      c.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowRight") { e.preventDefault(); open = clamp(open + 0.5, 0, 1); layout(true); }
+        else if (e.key === "ArrowLeft") { e.preventDefault(); open = clamp(open - 0.5, 0, 1); layout(true); }
+        else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open = open > 0.5 ? 0 : 1; layout(true); }
+        else return;
+        say(open > 0.5 ? "展开" : "收拢");
+      });
+    });
+
+    resetStack = function () { open = 0; layout(true); say("已收拢"); };
+    layouts.push(layout);
+    layout(false);
+  }
+
+  initShelf(); initFolder(); initTasks(); initStack();
+
+  /* ---------- 卡底 Done：各面板复位（帧里同样的黑色按钮位） ---------- */
+  root.querySelectorAll(".done").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var a = btn.getAttribute("data-act");
+      if (a === "shelf" && resetShelf) resetShelf();
+      if (a === "folder" && resetFolder) resetFolder();
+      if (a === "tasks" && resetTasks) resetTasks();
+      if (a === "stack" && resetStack) resetStack();
+    });
+  });
+
+  var rt;
+  window.addEventListener("resize", function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () { layouts.forEach(function (f) { f(false); }); }, 80);
+  });
+  if (MQ.addEventListener) MQ.addEventListener("change", function () { layouts.forEach(function (f) { f(false); }); });
+})();
+
+</script>
+</body>
+</html>

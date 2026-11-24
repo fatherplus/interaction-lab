@@ -1,0 +1,29 @@
+# 生产叠加层：docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml up -d --build
+# 需要 .env：ILAB_DOMAIN=ilab.example.com 与 IL_TELEMETRY_SALT=<openssl rand -hex 32>
+
+services:
+  interaction-lab:
+    environment:
+      IL_TELEMETRY_SALT: ${IL_TELEMETRY_SALT:?请在 .env 中设置 IL_TELEMETRY_SALT}
+
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: interaction-lab-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      ILAB_DOMAIN: ${ILAB_DOMAIN:?请在 .env 中设置 ILAB_DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      interaction-lab:
+        condition: service_healthy
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,18 @@
+# Interaction Lab — Caddy vhost
+# 域名由 .env 里的 ILAB_DOMAIN 注入；证书自动签发与续期。
+
+{$ILAB_DOMAIN} {
+	encode zstd gzip
+
+	# 埋点上报体积很小，限制请求体即可
+	request_body {
+		max_size 64KB
+	}
+
+	reverse_proxy interaction-lab:8900
+
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	}
+}

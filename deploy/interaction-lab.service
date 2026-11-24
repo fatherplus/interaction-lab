@@ -1,0 +1,34 @@
+[Unit]
+Description=Interaction Lab (static gallery + AI API + telemetry)
+Documentation=https://github.com/fatherplus/interaction-lab
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=interactionlab
+Group=interactionlab
+WorkingDirectory=/srv/interaction-lab
+EnvironmentFile=-/etc/interaction-lab/env
+
+# Rebuild before each start so `git pull && systemctl restart` is a full deploy
+ExecStartPre=/usr/bin/python3 build.py
+ExecStart=/usr/bin/python3 server/app.py
+
+Restart=on-failure
+RestartSec=3
+
+# Hardening: the build only needs to write dist/, the server only its database
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadWritePaths=/srv/interaction-lab/dist /var/lib/interaction-lab
+
+[Install]
+WantedBy=multi-user.target

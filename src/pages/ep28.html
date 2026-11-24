@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 28 集 · 8种高级交互设计，提升AI做App的质感 — Interaction Lab</title>
+<style>
+:root{--ease:cubic-bezier(.16,1,.3,1);--bg:#f2f2f4;--panel:#fff;--ink:#15161a;
+  --ink-2:rgba(0,0,0,.72);--ink-3:rgba(0,0,0,.42);--line:rgba(0,0,0,.09);
+  --accent:#0071e3;--accent-2:#5ac8fa;--chip:rgba(0,0,0,.05)}
+html[data-theme="dark"]{color-scheme:dark;--bg:#08090c;--panel:#131418;--ink:#f2f3f5;
+  --ink-2:rgba(255,255,255,.74);--ink-3:rgba(255,255,255,.44);--line:rgba(255,255,255,.12);
+  --accent:#2997ff;--accent-2:#64d2ff;--chip:rgba(255,255,255,.08)}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;overflow-x:hidden}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;
+  transition:background .22s linear,color .22s linear}
+.bar{position:sticky;top:0;z-index:90;backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  background:color-mix(in oklab,var(--bg) 82%,transparent);border-bottom:1px solid var(--line)}
+.bar .in{max-width:1240px;margin:0 auto;padding:0 26px;height:54px;display:flex;align-items:center;gap:14px}
+.back{display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--ink-2);font-size:13px}
+.back:hover{color:var(--ink)}
+.back svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.crumb{font-size:13px;color:var(--ink-3)}
+.crumb b{color:var(--ink);font-weight:600}
+.bar .sp{margin-left:auto}
+.toggle{border:1px solid var(--line);background:var(--chip);color:var(--ink);font:inherit;font-size:12.5px;
+  padding:6px 13px;border-radius:999px;cursor:pointer;transition:transform .2s var(--ease)}
+.toggle:hover{transform:translateY(-1px)}
+.stagewrap{max-width:1240px;margin:0 auto;padding:26px 26px 60px}
+.note{max-width:1240px;margin:0 auto;padding:0 26px 40px;color:var(--ink-3);font-size:12.5px;line-height:1.7}
+.note b{color:var(--ink-2)}
+.note a{color:var(--accent);text-decoration:none}
+@media (max-width:700px){.stagewrap{padding:14px 12px 40px} .crumb{display:none}}
+</style>
+<style>
+/* 组件修正：ep26 的模拟侧栏原本写成 position:fixed（原片是静态侧栏），
+   在整页宽下会脱离模拟框，这里强制回到文档流。 */
+.ep26 .rail{position:static}
+
+/* ============ ep28 · 8 interaction primitives ============ */
+.ep28{
+  --bg:#EDEFE8; --surf:rgba(255,255,255,.74); --surf2:rgba(255,255,255,.55);
+  --ink:#1F241F; --mut:#6B746A; --line:rgba(28,34,28,.10); --line2:rgba(28,34,28,.16);
+  --a-send:#12876F; --a-menu:#C07328; --a-acc:#6E5CD0; --a-sel:#3B8F55;
+  --a-step:#CE4E78; --a-flip:#3A72CE; --a-filt:#A98317; --a-plan:#2A8580;
+  --on:#fff; --shadow:0 1px 2px rgba(24,32,26,.06),0 8px 24px -14px rgba(24,32,26,.35);
+  --e:cubic-bezier(.16,1,.3,1); --e2:cubic-bezier(.22,.61,.36,1);
+  --t:320ms;
+  display:block; position:relative; padding:18px 16px 20px; border-radius:22px;
+  background:
+    radial-gradient(120% 90% at 12% 0%,rgba(18,135,111,.10),transparent 60%),
+    radial-gradient(90% 80% at 92% 8%,rgba(110,92,208,.10),transparent 62%),
+    var(--bg);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums; letter-spacing:.005em;
+}
+.ep28 *{box-sizing:border-box}
+.ep28 button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ep28 h4{margin:0;font-size:15px;font-weight:650;letter-spacing:-.01em;line-height:1.2}
+.ep28 p{margin:0}
+.ep28 .principle{
+  margin:0 0 14px; max-width:64ch; font-size:12.5px; line-height:1.65; color:var(--mut); text-wrap:pretty;
+}
+.ep28 .principle::before{
+  content:"PRINCIPLE"; display:block; font-size:8.5px; letter-spacing:.16em; font-weight:700;
+  color:var(--ink); opacity:.5; margin-bottom:5px;
+}
+
+/* ---- stage ---- */
+.ep28 .stage{
+  height:352px; padding:12px 12px 14px; border-radius:18px; overflow:hidden;
+  background:linear-gradient(180deg,var(--surf2),transparent 70%),var(--surf);
+  border:1px solid var(--line);
+  display:flex; flex-direction:column; gap:10px;
+}
+
+/* ---- rail ---- */
+.ep28 .rail{display:flex; gap:6px; flex:0 0 auto}
+.ep28 .rt{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:5px; align-items:center;
+  padding:4px 0 5px; border-radius:8px;
+}
+.ep28 .rt:focus-visible{outline:2px solid var(--a-send); outline-offset:3px}
+.ep28 .rt i{
+  font-style:normal; font-size:9px; font-weight:700; letter-spacing:.06em;
+  color:var(--mut); opacity:.92; transition:color var(--t) var(--e),opacity var(--t) var(--e);
+}
+.ep28 .rt .bar{
+  display:block; width:100%; height:3px; border-radius:99px; background:var(--line2);
+  transform:scaleX(.72); transition:transform var(--t) var(--e),background var(--t) var(--e);
+}
+.ep28 .rt[aria-selected="true"] i{color:var(--ink); opacity:1}
+.ep28 .rt[aria-selected="true"] .bar{transform:scaleX(1); background:var(--ink)}
+.ep28 .rt:hover .bar{transform:scaleX(.92)}
+
+/* ---- deck / panels ---- */
+.ep28 .deck{position:relative; flex:1 1 auto; min-height:0}
+.ep28 .p{
+  position:absolute; inset:0; display:flex; flex-direction:column; gap:8px;
+  opacity:0; visibility:hidden; transform:translateY(10px); pointer-events:none;
+  transition:opacity 240ms var(--e2),transform 240ms var(--e2),visibility 240ms step-end;
+}
+.ep28 .p.on{opacity:1; visibility:visible; transform:none; pointer-events:auto; transition-delay:0ms}
+.ep28 .ph{display:flex; align-items:baseline; gap:7px; flex:0 0 auto; min-width:0}
+.ep28 .ph .pn{
+  font-size:9px; font-weight:800; letter-spacing:.04em; color:var(--a);
+  padding:2px 5px; border-radius:5px; background:color-mix(in srgb,var(--a) 14%,transparent);
+}
+.ep28 .ph b{font-size:12.5px; font-weight:650; letter-spacing:.005em; white-space:nowrap}
+.ep28 .ph i{
+  font-style:normal; font-size:9px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--mut); opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.ep28 .ph .pb{
+  margin-left:auto; font-style:normal; font-size:9px; font-weight:600; color:var(--a);
+  padding:2px 7px; border-radius:99px; background:color-mix(in srgb,var(--a) 11%,transparent);
+  white-space:nowrap; flex:0 0 auto; max-width:44%;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.ep28 .body{
+  flex:1 1 auto; min-height:0; display:flex; flex-direction:column; justify-content:center;
+  gap:8px; position:relative;
+}
+.ep28 .hint{
+  font-size:9.5px; line-height:1.45; color:var(--mut); opacity:.9; flex:0 0 auto;
+  text-wrap:pretty;
+}
+
+/* ---- shared card ---- */
+.ep28 .card{
+  position:relative; border-radius:14px; padding:12px; background:var(--surf);
+  border:1px solid var(--line); box-shadow:var(--shadow);
+}
+.ep28 .eyebrow{
+  font-size:8px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--mut); opacity:.8; margin-bottom:3px;
+}
+.ep28 .sub{font-size:10px; color:var(--mut); margin-top:2px}
+.ep28 .thumb{
+  display:block; width:44px; height:44px; border-radius:10px; flex:0 0 auto;
+  background:linear-gradient(150deg,#F2C078,#D98B5F 46%,#7D6FA8);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);
+}
+.ep28 .thumb.big{width:38px; height:38px; border-radius:11px}
+
+/* ---- 01 send ---- */
+.ep28 .p[data-k="send"]{--a:var(--a-send)}
+.ep28 .send{display:flex; flex-direction:column; gap:11px; overflow:visible}
+.ep28 .trip{display:flex; align-items:flex-start; gap:10px}
+.ep28 .stx{min-width:0; flex:1}
+.ep28 .stx h4{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ep28 .smeta{display:flex; align-items:center; gap:5px; flex-wrap:wrap}
+.ep28 .smeta span{
+  font-size:8.5px; font-weight:600; letter-spacing:.03em; color:var(--mut);
+  padding:3px 7px; border-radius:99px; border:1px solid var(--line2);
+}
+.ep28 .smeta .gd{margin-left:auto; color:var(--ink); background:color-mix(in srgb,var(--ink) 8%,transparent); border-color:transparent; letter-spacing:.09em; font-size:7.5px}
+.ep28 .cta{
+  position:relative; display:flex; align-items:center; justify-content:center; gap:7px;
+  height:38px; border-radius:11px; background:#2A2438; color:#fff;
+  font-size:12px; font-weight:650; letter-spacing:.01em;
+  transition:transform 180ms var(--e2),background var(--t) var(--e),color var(--t) var(--e),
+             box-shadow var(--t) var(--e);
+  box-shadow:0 6px 16px -10px rgba(42,36,56,.9);
+}
+.ep28 .cta:active{transform:scale(.958)}
+.ep28 .cta:focus-visible{outline:2px solid var(--a); outline-offset:2px}
+.ep28 .cta .tick{width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; opacity:0; width:0; transition:opacity 200ms var(--e2)}
+.ep28 .cta .plane{position:absolute; left:26%; top:50%; width:15px; height:15px; color:#fff; opacity:0; transform:translate(0,-50%); pointer-events:none}
+.ep28 .send[data-s="sending"] .cta{background:#3B3350; transform:scale(.978)}
+.ep28 .send[data-s="sending"] .plane{animation:ep28-fly 560ms var(--e) forwards}
+.ep28 .send[data-s="sent"] .cta{background:var(--a-send); transform:none; box-shadow:0 6px 18px -12px rgba(18,135,111,.9)}
+.ep28 .send[data-s="sent"] .cta .tick{opacity:1; width:15px}
+@keyframes ep28-fly{
+  0%{opacity:0; transform:translate(0,-50%) scale(.85) rotate(0)}
+  22%{opacity:1}
+  100%{opacity:0; transform:translate(120px,-92px) rotate(18deg) scale(1.05)}
+}
+
+/* ---- 02 long press ---- */
+.ep28 .p[data-k="menu"]{--a:var(--a-menu)}
+.ep28 .lp{position:relative; display:flex; flex-direction:column; gap:8px}
+.ep28 .lp-card{
+  position:relative; display:flex; align-items:center; gap:10px; padding:12px;
+  border-radius:14px; background:var(--surf); border:1px solid var(--line);
+  box-shadow:var(--shadow); overflow:hidden; touch-action:pan-y; user-select:none;
+  transition:transform 220ms var(--e2),opacity 220ms var(--e2),border-color 220ms var(--e2);
+}
+.ep28 .lp-card:focus-visible{outline:2px solid var(--a); outline-offset:2px}
+.ep28 .ltx{display:flex; flex-direction:column; gap:2px; min-width:0; flex:1}
+.ep28 .ltx b{font-size:13px; font-weight:650}
+.ep28 .ltx i{font-style:normal; font-size:9.5px; color:var(--mut); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ep28 .dots{font-size:15px; color:var(--mut); letter-spacing:1px; line-height:1}
+.ep28 .hold{
+  position:absolute; left:12px; right:12px; bottom:6px; height:2px; border-radius:2px;
+  background:var(--a); transform:scaleX(0); transform-origin:left; opacity:0;
+  transition:transform 120ms linear,opacity 120ms linear;
+}
+.ep28 .lp-card.is-holding .hold{opacity:.9; transform:scaleX(1); transition:transform 420ms linear,opacity 80ms linear}
+.ep28 .lp[data-open="1"] .lp-card{transform:scale(.975); opacity:.74; border-color:color-mix(in srgb,var(--a) 45%,var(--line))}
+.ep28 .lp[data-open="1"] .dots{color:var(--a)}
+.ep28 .menu{
+  position:relative; display:flex; flex-direction:column; gap:2px; padding:5px;
+  border-radius:13px; background:var(--surf); border:1px solid var(--line2);
+  box-shadow:0 14px 30px -18px rgba(20,26,22,.55);
+  opacity:0; transform:translateY(-8px) scale(.97); transform-origin:top right;
+  pointer-events:none; transition:opacity 200ms var(--e2),transform 240ms var(--e);
+}
+.ep28 .lp[data-open="1"] .menu{opacity:1; transform:none; pointer-events:auto}
+.ep28 .menu::before{
+  content:""; position:absolute; top:-5px; right:26px; width:9px; height:9px;
+  background:inherit; border-left:1px solid var(--line2); border-top:1px solid var(--line2);
+  transform:rotate(45deg); border-radius:2px 0 0 0;
+}
+.ep28 .mi{
+  display:flex; align-items:center; gap:9px; height:34px; padding:0 9px; border-radius:9px;
+  font-size:11.5px; font-weight:550; text-align:left;
+  opacity:0; transform:translateY(5px);
+  transition:opacity 200ms var(--e2),transform 240ms var(--e),background 140ms linear;
+}
+.ep28 .mi svg{width:15px; height:15px; flex:0 0 auto; fill:none; stroke:var(--a); stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round}
+.ep28 .mi:hover,.ep28 .mi:focus-visible{background:color-mix(in srgb,var(--a) 12%,transparent); outline:none}
+.ep28 .lp[data-open="1"] .mi{opacity:1; transform:none}
+.ep28 .lp[data-open="1"] .mi:nth-child(1){transition-delay:30ms}
+.ep28 .lp[data-open="1"] .mi:nth-child(2){transition-delay:70ms}
+.ep28 .lp[data-open="1"] .mi:nth-child(3){transition-delay:110ms}
+
+/* ---- 03 accordion ---- */
+.ep28 .p[data-k="acc"]{--a:var(--a-acc)}
+.ep28 .acc{padding:11px 12px 6px; display:flex; flex-direction:column}
+.ep28 .actx{padding-bottom:7px}
+.ep28 .ar{
+  display:flex; align-items:center; gap:8px; width:100%; min-height:33px; padding:6px 0;
+  font-size:11.5px; font-weight:550; text-align:left; color:var(--ink);
+  border-top:1px solid var(--line);
+}
+.ep28 .ar span{flex:1; min-width:0}
+.ep28 .ar:focus-visible{outline:2px solid var(--a); outline-offset:-2px; border-radius:6px}
+.ep28 .ch{
+  width:13px; height:13px; flex:0 0 auto; fill:none; stroke:var(--a); stroke-width:2;
+  stroke-linecap:round; stroke-linejoin:round;
+  transition:transform var(--t) var(--e);
+}
+.ep28 .ar[aria-expanded="true"] .ch{transform:rotate(180deg)}
+.ep28 .ab{
+  display:grid; grid-template-rows:0fr; opacity:.0;
+  transition:grid-template-rows var(--t) var(--e),opacity 240ms var(--e2);
+}
+.ep28 .ab>div{overflow:hidden; min-height:0}
+.ep28 .abw{min-height:0}
+.ep28 .abi{
+  font-size:10px; line-height:1.55; color:var(--mut); padding:0 0 9px 0; max-width:34ch;
+}
+.ep28 .ar[aria-expanded="true"]+.ab{grid-template-rows:1fr; opacity:1}
+
+/* ---- 04 multi select ---- */
+.ep28 .p[data-k="sel"]{--a:var(--a-sel)}
+.ep28 .sl{
+  position:relative; border-radius:14px; padding:11px 12px 0; background:var(--surf);
+  border:1px solid var(--line); box-shadow:var(--shadow); overflow:hidden;
+}
+.ep28 .mrow{
+  display:flex; align-items:center; gap:9px; width:100%; padding:8px 0;
+  border-top:1px solid var(--line); text-align:left;
+}
+.ep28 .mrow:first-of-type{border-top:0}
+.ep28 .mrow:focus-visible{outline:2px solid var(--a); outline-offset:-2px; border-radius:7px}
+.ep28 .box{
+  width:17px; height:17px; border-radius:5px; flex:0 0 auto;
+  border:1.4px solid var(--line2); background:transparent;
+  display:grid; place-items:center;
+  transition:background 200ms var(--e),border-color 200ms var(--e),transform 200ms var(--e2);
+}
+.ep28 .box svg{width:11px; height:11px; fill:none; stroke:#fff; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; opacity:0; transition:opacity 160ms var(--e2)}
+.ep28 .mrow[aria-checked="true"] .box{background:var(--a); border-color:var(--a); transform:scale(1.04)}
+.ep28 .mrow[aria-checked="true"] .box svg{opacity:1}
+.ep28 .mrow[aria-checked="true"] .nm{color:var(--ink)}
+.ep28 .nm{display:flex; align-items:baseline; gap:6px; font-size:11.5px; font-weight:550; min-width:0}
+.ep28 .nm i{font-style:normal; font-size:9px; color:var(--mut); opacity:.85}
+.ep28 .abar{
+  display:flex; align-items:center; gap:8px; margin:6px -12px 0; padding:9px 12px;
+  background:rgba(28,32,30,.92); color:#fff;
+  transform:translateY(110%); opacity:0; pointer-events:none;
+  transition:transform var(--t) var(--e),opacity 220ms var(--e2);
+}
+.ep28 .abar[data-n="1"],.ep28 .abar[data-n="2"],.ep28 .abar[data-n="3"]{transform:none; opacity:1; pointer-events:auto}
+.ep28 .cnt{font-size:9.5px; letter-spacing:.04em; opacity:.85; flex:0 0 auto}
+.ep28 .badd{
+  margin-left:auto; font-size:10px; font-weight:650; padding:4px 9px; border-radius:7px;
+  background:color-mix(in srgb,var(--a-sel) 78%,#fff); color:#06251A;
+  transition:transform 180ms var(--e2),filter 180ms linear;
+}
+.ep28 .badd:active{transform:scale(.94)}
+.ep28 .bclr{font-size:10px; opacity:.7; padding:4px 2px}
+.ep28 .bclr:hover{opacity:1}
+
+/* ---- 05 stepper ---- */
+.ep28 .p[data-k="step"]{--a:var(--a-step)}
+.ep28 .q{padding:11px 12px 4px}
+.ep28 .qhead{padding-bottom:6px}
+.ep28 .qrow{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  padding:7px 0; border-top:1px solid var(--line);
+}
+.ep28 .qn{display:flex; flex-direction:column; gap:1px; min-width:0}
+.ep28 .qn b{font-size:11.5px; font-weight:600}
+.ep28 .qn i{font-style:normal; font-size:8.5px; color:var(--mut)}
+.ep28 .stp{display:flex; align-items:center; gap:7px; flex:0 0 auto}
+.ep28 .qb{
+  width:26px; height:26px; border-radius:50%; display:grid; place-items:center;
+  font-size:14px; font-weight:600; line-height:1; color:var(--ink);
+  border:1.2px solid var(--line2); background:var(--surf2);
+  transition:transform 200ms var(--e),background 200ms var(--e),color 200ms var(--e),border-color 200ms var(--e),opacity 200ms var(--e);
+}
+.ep28 .qb:active{transform:scale(.9); background:color-mix(in srgb,var(--a) 16%,transparent)}
+.ep28 .qb:focus-visible{outline:2px solid var(--a); outline-offset:2px}
+.ep28 .qb[disabled]{opacity:.32; cursor:not-allowed; border-style:dashed}
+.ep28 .num{
+  position:relative; display:block; width:22px; height:22px; overflow:hidden;
+  text-align:center; font-size:17px; font-weight:650; line-height:22px; color:var(--a);
+}
+.ep28 .strip{
+  display:block; font-size:22px; transition:transform 320ms var(--e);
+}
+.ep28 .strip span{display:block; height:22px; line-height:22px; font-size:17px}
+.ep28 .num .sr{
+  position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap;
+}
+
+/* ---- 06 flip ---- */
+.ep28 .p[data-k="flip"]{--a:var(--a-flip)}
+.ep28 .flip{perspective:900px; display:flex; justify-content:center}
+.ep28 .fi{
+  position:relative; width:100%; max-width:288px; height:186px;
+  transform-style:preserve-3d; transition:transform 420ms var(--e);
+}
+.ep28 .fi[data-f="1"]{transform:rotateY(180deg)}
+.ep28 .face{
+  position:absolute; inset:0; border-radius:15px; padding:13px;
+  backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  display:flex; flex-direction:column;
+  border:1px solid var(--line); box-shadow:var(--shadow);
+  background:
+    radial-gradient(120% 90% at 85% 8%,rgba(58,114,206,.16),transparent 62%),
+    radial-gradient(90% 80% at 8% 100%,rgba(206,78,120,.14),transparent 60%),
+    var(--surf);
+  text-align:left;
+}
+.ep28 .front{cursor:pointer; justify-content:flex-start; gap:4px; color:var(--ink)}
+.ep28 .front:focus-visible{outline:2px solid var(--a); outline-offset:3px}
+.ep28 .front h4{font-size:18px; letter-spacing:-.02em}
+.ep28 .back{transform:rotateY(180deg); justify-content:flex-start; gap:3px}
+.ep28 .back h4{font-size:15px}
+.ep28 .bps{font-size:10px; line-height:1.5; color:var(--mut); max-width:30ch; margin-top:3px}
+.ep28 .tags{display:flex; flex-wrap:wrap; gap:4px; margin-top:auto}
+.ep28 .tags i{
+  font-style:normal; font-size:7.5px; font-weight:700; letter-spacing:.1em;
+  padding:3px 6px; border-radius:99px; border:1px solid var(--line2); color:var(--mut);
+}
+.ep28 .front .tags{margin-top:auto; opacity:.5}
+.ep28 .tapcue{
+  display:flex; align-items:center; gap:4px; margin-top:6px;
+  font-size:8px; font-weight:700; letter-spacing:.12em; color:var(--a);
+}
+.ep28 .tapcue svg{width:11px; height:11px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.ep28 .backto{
+  align-self:flex-start; margin-top:6px; font-size:9px; font-weight:600; color:var(--a);
+  padding:3px 0;
+}
+.ep28 .backto:focus-visible{outline:2px solid var(--a); outline-offset:3px; border-radius:4px}
+
+/* ---- 07 filter ---- */
+.ep28 .p[data-k="filt"]{--a:var(--a-filt)}
+.ep28 .fl{display:flex; flex-direction:column; gap:7px; min-width:0}
+.ep28 .searchpill{
+  display:flex; align-items:center; gap:6px; height:28px; padding:0 10px;
+  border-radius:99px; border:1px solid var(--line); background:var(--surf2);
+  font-size:10px; color:var(--mut);
+}
+.ep28 .searchpill svg{width:12px; height:12px; flex:0 0 auto; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round}
+.ep28 .chips{
+  position:relative; display:flex; gap:4px; padding:3px; border-radius:99px;
+  background:color-mix(in srgb,var(--line) 60%,transparent); align-self:flex-start;
+  max-width:100%;
+}
+.ep28 .pill{
+  position:absolute; top:3px; bottom:3px; left:0; width:0; border-radius:99px;
+  background:var(--ink); box-shadow:0 2px 8px -4px rgba(0,0,0,.5);
+  transition:left 320ms var(--e),width 320ms var(--e);
+}
+.ep28 .chip{
+  position:relative; z-index:1; padding:4px 12px; border-radius:99px;
+  font-size:10.5px; font-weight:600; color:var(--mut); white-space:nowrap;
+  transition:color 240ms var(--e);
+}
+.ep28 .chip[aria-selected="true"]{color:#fff}
+.ep28 .chip:focus-visible{outline:2px solid var(--a); outline-offset:3px}
+.ep28 .res{
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px;
+  transition:opacity 130ms linear;
+}
+.ep28 .res.fade{opacity:0}
+.ep28 .rc{
+  position:relative; height:74px; border-radius:11px; overflow:hidden;
+  display:flex; align-items:flex-end; padding:7px;
+  border:1px solid var(--line);
+  animation:ep28-rise 320ms var(--e) both;
+}
+.ep28 .rc b{
+  position:relative; z-index:1; font-size:10px; font-weight:650; color:#fff;
+  text-shadow:0 1px 6px rgba(0,0,0,.55); display:flex; align-items:center; gap:4px;
+}
+.ep28 .rc b::before{content:""; width:2px; height:9px; border-radius:2px; background:var(--a-filt)}
+.ep28 .rc.c1{background:linear-gradient(160deg,#BFD9E6,#5E8FB0 55%,#2E5170)}
+.ep28 .rc.c2{background:linear-gradient(160deg,#C9D3C2,#7C8C74 55%,#3E4A3C)}
+.ep28 .rc.c3{background:linear-gradient(160deg,#F0C98F,#C98A57 55%,#7C4E36)}
+.ep28 .rc.c4{background:linear-gradient(160deg,#DCC9E2,#97789F 55%,#4E3B56)}
+@keyframes ep28-rise{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+
+/* ---- 08 steps ---- */
+.ep28 .p[data-k="plan"]{--a:var(--a-plan)}
+.ep28 .plan{padding:11px 12px 10px; display:flex; flex-direction:column; gap:9px}
+.ep28 .track{
+  position:relative; display:flex; justify-content:space-between; align-items:flex-start;
+  padding:2px 4px 0;
+}
+.ep28 .track::before{
+  content:""; position:absolute; left:14px; right:14px; top:11px; height:2px;
+  background:var(--line2); border-radius:2px;
+}
+.ep28 .fill{
+  position:absolute; left:14px; top:11px; height:2px; border-radius:2px; background:var(--a);
+  width:0%; transition:width 380ms var(--e);
+}
+.ep28 .node{
+  position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:4px;
+  width:52px;
+}
+.ep28 .node b{
+  display:grid; place-items:center; width:22px; height:22px; border-radius:50%;
+  font-size:10px; font-weight:700; color:var(--mut);
+  background:var(--bg); border:1.4px solid var(--line2);
+  transition:background 260ms var(--e),color 260ms var(--e),border-color 260ms var(--e),transform 260ms var(--e),box-shadow 260ms var(--e);
+}
+.ep28 .node i{font-style:normal; font-size:8.5px; color:var(--mut); letter-spacing:.02em; transition:color 260ms var(--e)}
+.ep28 .node.done b{background:var(--a); border-color:var(--a); color:#fff}
+.ep28 .node.done i{color:var(--ink); opacity:.8}
+.ep28 .node.cur b{
+  background:var(--surf); border-color:var(--a); color:var(--a); transform:scale(1.1);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--a) 16%,transparent);
+}
+.ep28 .node.cur i{color:var(--ink)}
+.ep28 .nx{
+  display:flex; align-items:center; gap:9px; padding:8px 8px 8px 10px; border-radius:11px;
+  background:color-mix(in srgb,var(--line) 55%,transparent);
+}
+.ep28 .nx-l{display:flex; flex-direction:column; gap:1px; min-width:0; flex:1}
+.ep28 .nx-l i{font-style:normal; font-size:7.5px; font-weight:700; letter-spacing:.14em; color:var(--mut)}
+.ep28 .nx-l b{font-size:11px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ep28 .nxb{
+  width:27px; height:27px; border-radius:50%; flex:0 0 auto; display:grid; place-items:center;
+  background:var(--a); color:#fff; transition:transform 220ms var(--e),background 220ms var(--e);
+}
+.ep28 .nxb svg{width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.ep28 .nxb:active{transform:scale(.88)}
+.ep28 .nxb:focus-visible{outline:2px solid var(--a); outline-offset:2px}
+
+/* ---- dark ---- */
+.ep28[data-theme="dark"]{
+  --bg:#141917; --surf:rgba(255,255,255,.065); --surf2:rgba(255,255,255,.04);
+  --ink:#E7EDE7; --mut:#98A49B; --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.17);
+  --a-send:#3FC0A0; --a-menu:#E09A55; --a-acc:#9A8DEE; --a-sel:#5FBF7C;
+  --a-step:#E8759C; --a-flip:#6B9EEC; --a-filt:#D6B044; --a-plan:#4EB3AC;
+  --shadow:0 1px 0 rgba(255,255,255,.03),0 14px 30px -22px rgba(0,0,0,.9);
+  background:
+    radial-gradient(120% 90% at 12% 0%,rgba(63,192,160,.13),transparent 58%),
+    radial-gradient(90% 80% at 92% 6%,rgba(154,141,238,.13),transparent 60%),
+    radial-gradient(80% 70% at 50% 108%,rgba(232,117,156,.10),transparent 62%),
+    var(--bg);
+}
+.ep28[data-theme="dark"] .chip[aria-selected="true"]{color:#111714}
+.ep28[data-theme="dark"] .pill{background:#E7EDE7}
+.ep28[data-theme="dark"] .cta{background:#EFEDF5; color:#201B2B}
+.ep28[data-theme="dark"] .send[data-s="sending"] .cta{background:#D9D5E6; color:#201B2B}
+.ep28[data-theme="dark"] .send[data-s="sending"] .plane{color:#201B2B}
+.ep28[data-theme="dark"] .send[data-s="sent"] .cta{background:var(--a-send); color:#08150F}
+.ep28[data-theme="dark"] .abar{background:rgba(255,255,255,.92); color:#111714}
+.ep28[data-theme="dark"] .badd{color:#08150F}
+.ep28[data-theme="dark"] .node b{background:#141917}
+
+/* ---- responsive ---- */
+@media (max-width:520px){
+  .ep28{padding:15px 13px 17px; border-radius:18px}
+  .ep28 .stage{height:348px; padding:10px 10px 12px}
+  .ep28 .ph b{font-size:12px}
+  .ep28 .ph i{display:none}
+  .ep28 .fi{height:174px; max-width:100%}
+}
+@media (max-width:380px){
+  .ep28 .rail{gap:4px}
+  .ep28 .rt i{font-size:8.5px}
+  .ep28 .chip{padding:4px 10px}
+}
+
+/* ---- reduced motion ---- */
+@media (prefers-reduced-motion: reduce){
+  .ep28 *,.ep28 *::before,.ep28 *::after{
+    transition-duration:1ms !important; animation-duration:1ms !important;
+    animation-iteration-count:1 !important;
+  }
+}
+</style>
+</head>
+<body>
+<div class="bar"><div class="in">
+  <a class="back" href="index.html"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>索引</a>
+  <span class="crumb">第 28 集 · <b>8种高级交互设计，提升AI做App的质感</b></span>
+  <span class="sp"></span>
+  <button class="toggle" id="theme"><span>日间</span></button>
+</div></div>
+<div class="stagewrap">
+<section class="demo ep28" data-slug="ep28-interactions" data-ep="28" data-title="8种高级交互设计，提升AI做App的质感" data-tags="send-state|long-press|accordion|multi-select|stepper|flip-card|filter|progress-steps">
+  <p class="principle">八种交互共用一条铁律：动作必须有回执。按钮先被压下去才承认被按，数字滚过去才承认变了，菜单从按下的那一点长出来才承认是指令——所以每一种都只做一件事，并把“我收到了”演给你看。</p>
+
+  <div class="stage">
+    <div class="rail" role="tablist" aria-label="八种交互">
+      <button class="rt" role="tab" id="ep28-t1" aria-controls="ep28-p1" aria-selected="true" tabindex="0"><i>01</i><span class="bar"></span></button>
+      <button class="rt" role="tab" id="ep28-t2" aria-controls="ep28-p2" aria-selected="false" tabindex="-1"><i>02</i><span class="bar"></span></button>
+      <button class="rt" role="tab" id="ep28-t3" aria-controls="ep28-p3" aria-selected="false" tabindex="-1"><i>03</i><span class="bar"></span></button>
+      <button class="rt" role="tab" id="ep28-t4" aria-controls="ep28-p4" aria-selected="false" tabindex="-1"><i>04</i><span class="bar"></span></button>
+      <button class="rt" role="tab" id="ep28-t5" aria-controls="ep28-p5" aria-selected="false" tabindex="-1"><i>05</i><span class="bar"></span></button>
+      <button class="rt" role="tab" id="ep28-t6" aria-controls="ep28-p6" aria-selected="false" tabindex="-1"><i>06</i><span class="bar"></span></button>
+      <button class="rt" role="tab" id="ep28-t7" aria-controls="ep28-p7" aria-selected="false" tabindex="-1"><i>07</i><span class="bar"></span></button>
+      <button class="rt" role="tab" id="ep28-t8" aria-controls="ep28-p8" aria-selected="false" tabindex="-1"><i>08</i><span class="bar"></span></button>
+    </div>
+
+    <div class="deck">
+
+      <!-- 01 SEND -->
+      <section class="p on" id="ep28-p1" role="tabpanel" aria-labelledby="ep28-t1" data-k="send">
+        <header class="ph"><span class="pn">01</span><b>纸飞机发送</b><i>send</i><em class="pb" data-role="s-badge">待发送</em></header>
+        <div class="body">
+          <div class="card send" data-s="idle">
+            <div class="trip">
+              <div class="stx">
+                <p class="eyebrow">SHARE YOUR TRIP</p>
+                <h4>Lisbon getaway</h4>
+                <p class="sub">Portugal · 3 days of exploring</p>
+              </div>
+              <span class="thumb" aria-hidden="true"></span>
+            </div>
+            <div class="smeta"><span>3 days</span><span>2 travelers</span><span class="gd">TRIP GUIDE</span></div>
+            <button class="cta" data-act="send">
+              <svg class="plane" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 11.7 22 2 13.5 22 10.6 13.4z" fill="currentColor"/></svg>
+              <span class="cta-t">Share trip</span>
+              <svg class="tick" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.4l4.1 4.1L16 5.8"/></svg>
+            </button>
+          </div>
+          <p class="hint">点一下按钮：先压 0.96 → 纸飞机飞出 → 发送中 → 已发送</p>
+        </div>
+      </section>
+
+      <!-- 02 LONG PRESS MENU -->
+      <section class="p" id="ep28-p2" role="tabpanel" aria-labelledby="ep28-t2" data-k="menu" aria-hidden="true">
+        <header class="ph"><span class="pn">02</span><b>长按快捷菜单</b><i>menu</i><em class="pb" data-role="m-badge">未触发</em></header>
+        <div class="body">
+          <div class="lp" data-open="0">
+            <div class="lp-card" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false" aria-label="Santorini，长按或按回车打开菜单">
+              <span class="thumb big" aria-hidden="true"></span>
+              <span class="ltx"><b>Santorini</b><i>Greece · saved 3 days ago</i></span>
+              <span class="dots" aria-hidden="true">⋯</span>
+              <span class="hold" aria-hidden="true"></span>
+            </div>
+            <div class="menu" role="menu" aria-label="收藏操作">
+              <button class="mi" role="menuitem" data-v="Share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4M5 14v4.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V14"/></svg><span>Share</span></button>
+              <button class="mi" role="menuitem" data-v="Duplicate"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M15.5 5.5H6.4A1.4 1.4 0 0 0 5 6.9v9.1"/></svg><span>Duplicate</span></button>
+              <button class="mi" role="menuitem" data-v="Move to trip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H9l1.8 2H19.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/></svg><span>Move to trip</span></button>
+            </div>
+          </div>
+          <p class="hint">按住 420ms（键盘用 Enter）：菜单在按压点下方长出，按 Escape 收起</p>
+        </div>
+      </section>
+
+      <!-- 03 ACCORDION -->
+      <section class="p" id="ep28-p3" role="tabpanel" aria-labelledby="ep28-t3" data-k="acc" aria-hidden="true">
+        <header class="ph"><span class="pn">03</span><b>手风琴问答</b><i>accordion</i><em class="pb">单开</em></header>
+        <div class="body">
+          <div class="card acc">
+            <div class="actx"><p class="eyebrow">GOOD TO KNOW</p><h4>Good to know</h4></div>
+            <button class="ar" aria-expanded="true"><span>How do I plan a trip?</span><svg class="ch" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 7.2 10 12.7l5.5-5.5"/></svg></button>
+            <div class="ab"><div class="abw"><p class="abi">Pick a destination, then save places to a trip. Everything stays in sync.</p></div></div>
+            <button class="ar" aria-expanded="false"><span>Can I save my progress?</span><svg class="ch" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 7.2 10 12.7l5.5-5.5"/></svg></button>
+            <div class="ab"><div class="abw"><p class="abi">Yes — saved places and drafts live in your account, not the session.</p></div></div>
+            <button class="ar" aria-expanded="false"><span>Where are my saved places?</span><svg class="ch" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 7.2 10 12.7l5.5-5.5"/></svg></button>
+            <div class="ab"><div class="abw"><p class="abi">Under Saved places, grouped by trip. Long-press a card for quick actions.</p></div></div>
+          </div>
+          <p class="hint">开一行、收其余：行高 0fr→1fr 动画，箭头同步转 180°</p>
+        </div>
+      </section>
+
+      <!-- 04 MULTI SELECT -->
+      <section class="p" id="ep28-p4" role="tabpanel" aria-labelledby="ep28-t4" data-k="sel" aria-hidden="true">
+        <header class="ph"><span class="pn">04</span><b>多选操作栏</b><i>multi select</i><em class="pb" data-role="sel-badge">0 selected</em></header>
+        <div class="body">
+          <div class="sl">
+            <div class="actx"><p class="eyebrow">SELECT FOR YOUR TRIP</p><h4>Your places</h4></div>
+            <button class="mrow" role="checkbox" aria-checked="false" data-n="Lisbon"><span class="box" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 10.6l4.2 4.2L16 6"/></svg></span><span class="nm">Lisbon<i>Portugal</i></span></button>
+            <button class="mrow" role="checkbox" aria-checked="false" data-n="Prague"><span class="box" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 10.6l4.2 4.2L16 6"/></svg></span><span class="nm">Prague<i>Czechia</i></span></button>
+            <button class="mrow" role="checkbox" aria-checked="false" data-n="Santorini"><span class="box" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 10.6l4.2 4.2L16 6"/></svg></span><span class="nm">Santorini<i>Greece</i></span></button>
+            <div class="abar" data-n="0">
+              <span class="cnt" data-role="sel-count">0 selected</span>
+              <button class="badd" data-role="sel-add">Add to trip</button>
+              <button class="bclr" data-role="sel-clear">Clear</button>
+            </div>
+          </div>
+          <p class="hint">勾第一项时，底部操作栏才从下方升起来接住这次选择</p>
+        </div>
+      </section>
+
+      <!-- 05 STEPPER -->
+      <section class="p" id="ep28-p5" role="tabpanel" aria-labelledby="ep28-t5" data-k="step" aria-hidden="true">
+        <header class="ph"><span class="pn">05</span><b>数量步进器</b><i>stepper</i><em class="pb" data-role="q-badge">2 人</em></header>
+        <div class="body">
+          <div class="card q">
+            <div class="qhead"><p class="eyebrow">PLAN YOUR GETAWAY</p><h4>Travelers</h4></div>
+            <div class="qrow" data-role="qrow" data-v="2" data-min="0" data-max="9">
+              <span class="qn"><b>Adults</b><i>Who’s coming along?</i></span>
+              <span class="stp">
+                <button class="qb" data-d="-1" aria-label="减少成人">−</button>
+                <span class="num" aria-live="polite"><span class="strip" aria-hidden="true"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span><b class="sr" data-role="q-out">2</b></span>
+                <button class="qb" data-d="1" aria-label="增加成人">+</button>
+              </span>
+            </div>
+            <div class="qrow" data-role="qrow" data-v="0" data-min="0" data-max="9">
+              <span class="qn"><b>Children</b><i>Under 12 years</i></span>
+              <span class="stp">
+                <button class="qb" data-d="-1" aria-label="减少儿童">−</button>
+                <span class="num" aria-live="polite"><span class="strip" aria-hidden="true"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span><b class="sr" data-role="q-out">0</b></span>
+                <button class="qb" data-d="1" aria-label="增加儿童">+</button>
+              </span>
+            </div>
+          </div>
+          <p class="hint">数字纵向滚一格，按钮按下去回弹；到 0 时减号自己关掉</p>
+        </div>
+      </section>
+
+      <!-- 06 FLIP -->
+      <section class="p" id="ep28-p6" role="tabpanel" aria-labelledby="ep28-t6" data-k="flip" aria-hidden="true">
+        <header class="ph"><span class="pn">06</span><b>卡片翻面</b><i>flip card</i><em class="pb" data-role="f-badge">正面</em></header>
+        <div class="body">
+          <div class="flip">
+            <div class="fi" data-f="0">
+              <div class="face front" data-role="flipbtn" role="button" tabindex="0" aria-label="翻开卡片查看里斯本指南">
+                <p class="eyebrow">A LITTLE ESCAPE</p>
+                <h4>A little escape</h4>
+                <span class="tags" aria-hidden="true"><i>WALKS</i><i>LOCAL FOOD</i><i>SLOW DAYS</i></span>
+                <span class="tapcue">TAP TO SEE MORE <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11m0 0-4-4m4 4-4 4"/></svg></span>
+              </div>
+              <div class="face back" aria-hidden="true">
+                <p class="eyebrow">A LITTLE TRAVEL GUIDE</p>
+                <h4>Slow down in Lisbon</h4>
+                <p class="bps">Old streets, sunny cafés and a little time to wander.</p>
+                <span class="tags"><i>WALKS</i><i>LOCAL FOOD</i><i>SLOW DAYS</i></span>
+                <button class="backto" data-role="flipback">← 翻回正面</button>
+              </div>
+            </div>
+          </div>
+          <p class="hint">沿竖轴转 180°，背面镜像被 backface-visibility 藏住</p>
+        </div>
+      </section>
+
+      <!-- 07 FILTER -->
+      <section class="p" id="ep28-p7" role="tabpanel" aria-labelledby="ep28-t7" data-k="filt" aria-hidden="true">
+        <header class="ph"><span class="pn">07</span><b>搜索筛选标签</b><i>filter</i><em class="pb" data-role="fl-badge">All</em></header>
+        <div class="body">
+          <div class="fl">
+            <div class="searchpill" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="8.6" cy="8.6" r="5.2"/><path d="M12.6 12.6 17 17"/></svg><span>Search destinations</span></div>
+            <div class="chips" role="tablist" aria-label="筛选目的地">
+              <span class="pill" aria-hidden="true"></span>
+              <button class="chip on" role="tab" aria-selected="true" data-f="All">All</button>
+              <button class="chip" role="tab" aria-selected="false" data-f="Coast">Coast</button>
+              <button class="chip" role="tab" aria-selected="false" data-f="City">City</button>
+            </div>
+            <div class="res" data-role="res"></div>
+          </div>
+          <p class="hint">选中的底色滑块平移过去，旧结果淡出，新结果逐个升起</p>
+        </div>
+      </section>
+
+      <!-- 08 STEPS -->
+      <section class="p" id="ep28-p8" role="tabpanel" aria-labelledby="ep28-t8" data-k="plan" aria-hidden="true">
+        <header class="ph"><span class="pn">08</span><b>行程进度步骤</b><i>steps</i><em class="pb" data-role="p-badge">1 / 3</em></header>
+        <div class="body">
+          <div class="card plan">
+            <div class="ptx"><p class="eyebrow">ONE STEP AT A TIME</p><h4>Your trip plan</h4></div>
+            <div class="track" data-i="0">
+              <span class="fill" aria-hidden="true"></span>
+              <span class="node done" data-n="0"><b>✓</b><i>Choose</i></span>
+              <span class="node cur" data-n="1"><b>2</b><i>Prepare</i></span>
+              <span class="node" data-n="2"><b>3</b><i>Enjoy</i></span>
+            </div>
+            <div class="nx">
+              <span class="nx-l"><i>UP NEXT</i><b data-role="nx-t">Make your plans</b></span>
+              <button class="nxb" data-role="nxnext" aria-label="进入下一步"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 12h12m0 0-4.6-4.6M17.5 12l-4.6 4.6"/></svg></button>
+            </div>
+          </div>
+          <p class="hint">节点从左到右逐个点亮，线跟着填；走完三步回到起点</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>
+</div>
+<div class="note">
+  <b>这一集的原则：</b>八种交互共用一条铁律：动作必须有回执——按钮先被压下去才承认被按，数字滚过去才承认变了。<br>
+  <b>证据帧：</b>18.jpg 纸飞机发送；30.jpg 手风琴；42.jpg 多选+底部操作栏；54.jpg 步进器 0 为硬下限；66.jpg 翻面；78.jpg 筛选错峰；90.jpg 复盘给出长按菜单项与三步进度<br>
+  <b>说明：</b>页面上所有交互都是真的（可拖、可按、可切），不是录屏；组件为单文件、无外部依赖。
+  返回<a href="index.html">索引</a>可以看其他集。
+</div>
+<script>
+(function(){
+  var root=document.documentElement, l=document.querySelector('#theme span');
+  function set(t){root.setAttribute('data-theme',t); l.textContent=(t==='dark'?'夜间':'日间');
+    try{localStorage.setItem('il-site-theme',t)}catch(e){}}
+  var s=null; try{s=localStorage.getItem('il-site-theme')}catch(e){}
+  set(s||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  document.getElementById('theme').onclick=function(){set(root.getAttribute('data-theme')==='dark'?'light':'dark')};
+})();
+</script>
+<script>
+
+(function () {
+  var root = document.querySelector('.ep28');
+  if (!root) return;
+  var RM = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var T = function (ms) { return RM.matches ? 0 : ms; };
+
+  /* ---------- rail / panel switching ---------- */
+  var tabs = [].slice.call(root.querySelectorAll('.rail .rt'));
+  var panels = [].slice.call(root.querySelectorAll('.deck .p'));
+  function select(i, focus) {
+    tabs.forEach(function (t, j) {
+      var on = j === i;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+    });
+    panels.forEach(function (p, j) {
+      var on = j === i;
+      p.classList.toggle('on', on);
+      if (on) { p.removeAttribute('aria-hidden'); } else { p.setAttribute('aria-hidden', 'true'); }
+    });
+    if (i === 6) placePill();
+    if (focus) tabs[i].focus();
+    root.setAttribute('data-active', i + 1);
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { select(i, false); });
+    t.addEventListener('keydown', function (e) {
+      var n = null;
+      if (e.key === 'ArrowRight') n = (i + 1) % tabs.length;
+      else if (e.key === 'ArrowLeft') n = (i - 1 + tabs.length) % tabs.length;
+      else if (e.key === 'Home') n = 0;
+      else if (e.key === 'End') n = tabs.length - 1;
+      if (n !== null) { e.preventDefault(); select(n, true); }
+    });
+  });
+  select(0, false);
+
+  /* ---------- 01 send ---------- */
+  var sendCard = root.querySelector('.send');
+  var cta = root.querySelector('.cta');
+  var ctaT = cta.querySelector('.cta-t');
+  var sBadge = root.querySelector('[data-role="s-badge"]');
+  var sTimer = null;
+  cta.addEventListener('click', function () {
+    var st = sendCard.getAttribute('data-s');
+    if (st === 'sending') return;
+    if (st === 'sent') {
+      sendCard.setAttribute('data-s', 'idle');
+      ctaT.textContent = 'Share trip';
+      sBadge.textContent = '待发送';
+      return;
+    }
+    sendCard.setAttribute('data-s', 'sending');
+    ctaT.textContent = 'Sending';
+    sBadge.textContent = '发送中';
+    sTimer = setTimeout(function () {
+      sendCard.setAttribute('data-s', 'sent');
+      ctaT.textContent = 'Trip sent';
+      sBadge.textContent = '已发送';
+    }, T(780));
+  });
+
+  /* ---------- 02 long press menu ---------- */
+  var lp = root.querySelector('.lp');
+  var lpCard = root.querySelector('.lp-card');
+  var menu = root.querySelector('.menu');
+  var mBadge = root.querySelector('[data-role="m-badge"]');
+  var holdT = null, startXY = null, opened = false;
+
+  function openMenu(focusFirst) {
+    if (opened) return;
+    opened = true;
+    lp.setAttribute('data-open', '1');
+    lpCard.setAttribute('aria-expanded', 'true');
+    lpCard.classList.remove('is-holding');
+    mBadge.textContent = '已展开';
+    if (focusFirst) {
+      var first = menu.querySelector('.mi');
+      if (first) first.focus();
+    }
+  }
+  function closeMenu() {
+    if (!opened) return;
+    opened = false;
+    lp.setAttribute('data-open', '0');
+    lpCard.setAttribute('aria-expanded', 'false');
+    mBadge.textContent = '未触发';
+  }
+  function cancelHold() {
+    if (holdT) { clearTimeout(holdT); holdT = null; }
+    lpCard.classList.remove('is-holding');
+  }
+  lpCard.addEventListener('pointerdown', function (e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    startXY = { x: e.clientX, y: e.clientY };
+    lpCard.classList.add('is-holding');
+    holdT = setTimeout(function () { holdT = null; openMenu(false); }, T(420));
+  });
+  lpCard.addEventListener('pointermove', function (e) {
+    if (!startXY) return;
+    if (Math.abs(e.clientX - startXY.x) > 9 || Math.abs(e.clientY - startXY.y) > 9) cancelHold();
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) {
+    lpCard.addEventListener(ev, cancelHold);
+  });
+  lpCard.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  lpCard.addEventListener('click', function () {
+    if (!opened && !holdT) { /* short tap: no menu, just a hint */ mBadge.textContent = '按久一点'; }
+  });
+  lpCard.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+      e.preventDefault(); openMenu(true);
+    } else if (e.key === 'Escape') { closeMenu(); }
+  });
+  menu.addEventListener('click', function (e) {
+    var item = e.target.closest('.mi');
+    if (!item) return;
+    closeMenu();
+    mBadge.textContent = item.getAttribute('data-v');
+    lpCard.focus();
+  });
+  menu.addEventListener('keydown', function (e) {
+    var items = [].slice.call(menu.querySelectorAll('.mi'));
+    var idx = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); items[(idx + 1) % items.length].focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); items[(idx - 1 + items.length) % items.length].focus(); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeMenu(); lpCard.focus(); }
+  });
+  document.addEventListener('pointerdown', function (e) {
+    if (opened && !lp.contains(e.target)) closeMenu();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && opened) { closeMenu(); lpCard.focus(); }
+  });
+
+  /* ---------- 03 accordion ---------- */
+  var accBtns = [].slice.call(root.querySelectorAll('.ar'));
+  accBtns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var isOpen = b.getAttribute('aria-expanded') === 'true';
+      accBtns.forEach(function (x) { x.setAttribute('aria-expanded', 'false'); });
+      b.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+    });
+    b.addEventListener('keydown', function (e) {
+      var i = accBtns.indexOf(b), n = null;
+      if (e.key === 'ArrowDown') n = (i + 1) % accBtns.length;
+      else if (e.key === 'ArrowUp') n = (i - 1 + accBtns.length) % accBtns.length;
+      if (n !== null) { e.preventDefault(); accBtns[n].focus(); }
+    });
+  });
+
+  /* ---------- 04 multi select ---------- */
+  var rows = [].slice.call(root.querySelectorAll('.mrow'));
+  var actionBar = root.querySelector('.abar');
+  var selCount = root.querySelector('[data-role="sel-count"]');
+  var selBadge = root.querySelector('[data-role="sel-badge"]');
+  var addBtn = root.querySelector('[data-role="sel-add"]');
+  var clrBtn = root.querySelector('[data-role="sel-clear"]');
+  function renderSel() {
+    var n = rows.filter(function (r) { return r.getAttribute('aria-checked') === 'true'; }).length;
+    actionBar.setAttribute('data-n', String(n));
+    selCount.textContent = n + (n === 1 ? ' selected' : ' selected');
+    selBadge.textContent = n + ' selected';
+    addBtn.textContent = 'Add to trip' + (n ? ' (' + n + ')' : '');
+  }
+  rows.forEach(function (r) {
+    function toggle() {
+      r.setAttribute('aria-checked', r.getAttribute('aria-checked') === 'true' ? 'false' : 'true');
+      renderSel();
+    }
+    r.addEventListener('click', toggle);
+    r.addEventListener('keydown', function (e) {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); }
+    });
+  });
+  clrBtn.addEventListener('click', function () {
+    rows.forEach(function (r) { r.setAttribute('aria-checked', 'false'); });
+    renderSel();
+  });
+  addBtn.addEventListener('click', function () {
+    selBadge.textContent = '已加入 ' + rows.filter(function (r) {
+      return r.getAttribute('aria-checked') === 'true';
+    }).length + ' 个地点';
+  });
+  renderSel();
+
+  /* ---------- 05 stepper ---------- */
+  var qrows = [].slice.call(root.querySelectorAll('[data-role="qrow"]'));
+  var qBadge = root.querySelector('[data-role="q-badge"]');
+  function renderQ(row) {
+    var v = parseInt(row.getAttribute('data-v'), 10);
+    var min = parseInt(row.getAttribute('data-min'), 10);
+    var max = parseInt(row.getAttribute('data-max'), 10);
+    var strip = row.querySelector('.strip');
+    strip.style.transform = 'translateY(' + (-v) + 'em)';
+    row.querySelector('[data-role="q-out"]').textContent = v;
+    row.querySelector('.qb[data-d="-1"]').disabled = v <= min;
+    row.querySelector('.qb[data-d="1"]').disabled = v >= max;
+    var adults = parseInt(qrows[0].getAttribute('data-v'), 10);
+    var kids = qrows[1] ? parseInt(qrows[1].getAttribute('data-v'), 10) : 0;
+    qBadge.textContent = (adults + kids) + ' 人';
+  }
+  qrows.forEach(function (row) {
+    [].slice.call(row.querySelectorAll('.qb')).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var v = parseInt(row.getAttribute('data-v'), 10) + parseInt(b.getAttribute('data-d'), 10);
+        var min = parseInt(row.getAttribute('data-min'), 10);
+        var max = parseInt(row.getAttribute('data-max'), 10);
+        row.setAttribute('data-v', String(Math.max(min, Math.min(max, v))));
+        renderQ(row);
+      });
+    });
+    renderQ(row);
+  });
+
+  /* ---------- 06 flip ---------- */
+  var fi = root.querySelector('.fi');
+  var flipBadge = root.querySelector('[data-role="f-badge"]');
+  function flip() {
+    var on = fi.getAttribute('data-f') !== '1';
+    fi.setAttribute('data-f', on ? '1' : '0');
+    flipBadge.textContent = on ? '背面' : '正面';
+    var front = fi.querySelector('.front'), back = fi.querySelector('.back');
+    front.setAttribute('aria-hidden', on ? 'true' : 'false');
+    back.setAttribute('aria-hidden', on ? 'false' : 'true');
+    front.tabIndex = on ? -1 : 0;
+  }
+  var flipFace = fi.querySelector('[data-role="flipbtn"]');
+  flipFace.addEventListener('click', flip);
+  flipFace.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); }
+  });
+  fi.querySelector('[data-role="flipback"]').addEventListener('click', flip);
+
+  /* ---------- 07 filter ---------- */
+  var chips = [].slice.call(root.querySelectorAll('.chip'));
+  var pill = root.querySelector('.pill');
+  var resEl = root.querySelector('[data-role="res"]');
+  var flBadge = root.querySelector('[data-role="fl-badge"]');
+  var DATA = {
+    All: [
+      ['Santorini', 'Greece · coast', 'c1'],
+      ['Iceland', 'Nordic · wild', 'c2'],
+      ['Lisbon', 'Portugal · city', 'c3'],
+      ['Kyoto', 'Japan · old town', 'c4']
+    ],
+    Coast: [
+      ['Santorini', 'Greece · coast', 'c1'],
+      ['Amalfi', 'Italy · cliffside', 'c3']
+    ],
+    City: [
+      ['Lisbon', 'Portugal · city', 'c3'],
+      ['Kyoto', 'Japan · old town', 'c4']
+    ]
+  };
+  function placePill() {
+    var active = chips.filter(function (c) { return c.getAttribute('aria-selected') === 'true'; })[0] || chips[0];
+    if (!active) return;
+    pill.style.left = active.offsetLeft + 'px';
+    pill.style.width = active.offsetWidth + 'px';
+  }
+  var listTimers = [];
+  function paint(key, animate) {
+    listTimers.forEach(clearTimeout);
+    listTimers = [];
+    var items = DATA[key] || DATA.All;
+    var html = items.map(function (it, i) {
+      return '<div class="rc ' + it[2] + '" style="animation-delay:' + (animate ? i * 55 : 0) + 'ms">' +
+             '<b>' + it[0] + '</b></div>';
+    }).join('');
+    if (!animate) { resEl.innerHTML = html; return; }
+    resEl.classList.add('fade');
+    listTimers.push(setTimeout(function () {
+      resEl.innerHTML = html;
+      resEl.classList.remove('fade');
+    }, T(140)));
+  }
+  chips.forEach(function (c) {
+    c.addEventListener('click', function () {
+      if (c.getAttribute('aria-selected') === 'true') return;
+      chips.forEach(function (x) { x.setAttribute('aria-selected', 'false'); });
+      c.setAttribute('aria-selected', 'true');
+      flBadge.textContent = c.getAttribute('data-f');
+      placePill();
+      paint(c.getAttribute('data-f'), true);
+    });
+    c.addEventListener('keydown', function (e) {
+      var i = chips.indexOf(c), n = null;
+      if (e.key === 'ArrowRight') n = (i + 1) % chips.length;
+      else if (e.key === 'ArrowLeft') n = (i - 1 + chips.length) % chips.length;
+      if (n !== null) { e.preventDefault(); chips[n].click(); chips[n].focus(); }
+    });
+  });
+  paint('All', false);
+  window.addEventListener('resize', placePill);
+  requestAnimationFrame(placePill);
+
+  /* ---------- 08 steps ---------- */
+  var track = root.querySelector('.track');
+  var fillEl = root.querySelector('.fill');
+  var nodes = [].slice.call(root.querySelectorAll('.node'));
+  var nxT = root.querySelector('[data-role="nx-t"]');
+  var nxNext = root.querySelector('[data-role="nxnext"]');
+  var pBadge = root.querySelector('[data-role="p-badge"]');
+  var COPY = ['Make your plans', 'Pack light, book slow', 'Go wander — trip ready'];
+  var cur = 1;
+  function renderPlan() {
+    fillEl.style.width = ((cur - 1) / (nodes.length - 1) * 100) + '%';
+    nodes.forEach(function (n, i) {
+      n.classList.toggle('done', i < cur - 1 || (cur === nodes.length && i === nodes.length - 1));
+      n.classList.toggle('cur', i === cur - 1 && cur < nodes.length);
+      var b = n.querySelector('b');
+      if (i < cur - 1) b.textContent = '✓';
+      else b.textContent = String(i + 1);
+      if (cur === nodes.length) b.textContent = '✓';
+    });
+    nxT.textContent = COPY[Math.min(cur - 1, COPY.length - 1)];
+    pBadge.textContent = Math.min(cur, nodes.length) + ' / ' + nodes.length;
+    if (cur >= nodes.length) {
+      fillEl.style.width = '100%';
+      nxT.textContent = 'Trip ready';
+      pBadge.textContent = '完成';
+    }
+  }
+  nxNext.addEventListener('click', function () {
+    cur = cur >= nodes.length ? 1 : cur + 1;
+    renderPlan();
+  });
+  renderPlan();
+})();
+
+</script>
+</body>
+</html>

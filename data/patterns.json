@@ -1,0 +1,4588 @@
+{
+  "version": "4.0.0",
+  "title": "Interaction Lab",
+  "subtitle": "AI-Native Open Interaction Workbench",
+  "description": "48 live, tunable interaction patterns with exact motion tokens, state machines, anti-pattern guardrails, and low-IQ-model-proof AI prompts.",
+  "categories": [
+    {
+      "id": "feedback-receipts",
+      "num": "01",
+      "name_cn": "反馈与回执",
+      "name_en": "Feedback & Receipts",
+      "summary": "每次按压、提交与状态切换都必须给出物理级确认，消除用户等待与操作落空感。"
+    },
+    {
+      "id": "direct-manipulation",
+      "num": "02",
+      "name_cn": "指针与物理操纵",
+      "name_en": "Pointer & Direct Manipulation",
+      "summary": "拖拽、吸附、旋钮、磁吸与 3D 倾斜，让界面直接响应指针的速度、距离与意图。"
+    },
+    {
+      "id": "navigation-focus",
+      "num": "03",
+      "name_cn": "导航与焦点调度",
+      "name_en": "Navigation & Focus",
+      "summary": "清晰回答“当前在哪”：通过胶囊反白、抬升与邻卡让位，一次只点亮一个主角。"
+    },
+    {
+      "id": "scroll-rhythm",
+      "num": "04",
+      "name_cn": "滚动与节奏编排",
+      "name_en": "Scroll & Temporal Rhythm",
+      "summary": "用视差、错峰、渐入、滚表与缓动重量感为页面建立呼吸节奏，而不是呆板瞬现。"
+    },
+    {
+      "id": "spatial-hierarchy",
+      "num": "05",
+      "name_cn": "版式与空间层级",
+      "name_en": "Spatial Hierarchy",
+      "summary": "先定唯一主角，再按主次分配列宽、比例与字号阶梯，告别平均主义模板感。"
+    },
+    {
+      "id": "surface-optics",
+      "num": "06",
+      "name_cn": "材质与光影语法",
+      "name_en": "Surface & Optics",
+      "summary": "用统一单光源、硬边折射与边缘流光塑造真实材质深度，不依赖杂乱描边。"
+    }
+  ],
+  "patterns": [
+    {
+      "id": "send-flight-receipt",
+      "category": "feedback-receipts",
+      "name_cn": "纸飞机发送回执",
+      "name_en": "Send Flight Receipt",
+      "demo": {
+        "kind": "rec",
+        "variant": "send"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "press",
+        "state"
+      ],
+      "tech": [
+        "css-transition",
+        "svg-stroke"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "按钮没反馈",
+        "提交生硬",
+        "发送按钮",
+        "表单确认",
+        "submit button",
+        "send feedback"
+      ],
+      "essence": "先用 0.96× 按压承认点击，再以图标飞出衔接异步状态，最后通过 SVG 路径描边确认落定。",
+      "when_to_use": [
+        "消息发送、表单提交、行程确认等有明确终态的主操作按钮",
+        "异步请求耗时在 300ms–1500ms 之间，希望原地完成反馈而非弹窗打断"
+      ],
+      "when_not_to_use": [
+        "高频连续点击的辅助工具按钮（如加粗、点赞）",
+        "耗时超过 5 秒的长任务（应配合进度条或后台任务提示）"
+      ],
+      "tokens": {
+        "--press-scale": "0.96",
+        "--fly-ms": "480ms",
+        "--check-ms": "360ms",
+        "--ease-out": "cubic-bezier(0.22, 1, 0.36, 1)"
+      },
+      "knobs": [
+        {
+          "key": "--press-scale",
+          "label": "按压缩放",
+          "unit": "",
+          "min": 0.9,
+          "max": 0.99,
+          "step": 0.01,
+          "default": 0.96
+        },
+        {
+          "key": "--fly-ms",
+          "label": "飞出耗时",
+          "unit": "ms",
+          "min": 220,
+          "max": 850,
+          "step": 20,
+          "default": 480
+        },
+        {
+          "key": "--check-ms",
+          "label": "对勾绘制",
+          "unit": "ms",
+          "min": 180,
+          "max": 700,
+          "step": 20,
+          "default": 360
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          1.0,
+          0.36,
+          1.0
+        ],
+        "label": "Expo Out · 快出稳刹"
+      },
+      "state_machine": [
+        {
+          "state": "idle",
+          "trigger": "初始态",
+          "visual": "主色胶囊 + 纸飞机图标 + 文案，min-width 锁死宽度",
+          "timing": "—"
+        },
+        {
+          "state": "pressed",
+          "trigger": "pointerdown",
+          "visual": "按钮整体缩至 var(--press-scale)",
+          "timing": "90ms ease-out"
+        },
+        {
+          "state": "sending",
+          "trigger": "click (加状态锁)",
+          "visual": "底色转为中性深灰，纸飞机沿 (22px, -22px) 飞出淡出",
+          "timing": "var(--fly-ms)"
+        },
+        {
+          "state": "sent",
+          "trigger": "提交完成",
+          "visual": "底色转绿，SVG 勾号 stroke-dashoffset 从 24 描边至 0",
+          "timing": "var(--check-ms)，停留 1.4s 复位"
+        }
+      ],
+      "do_not": [
+        "禁止在切换“发送中/已发送”文案时改变按钮宽度导致邻近元素左右抖动，必须设定固定 min-width",
+        "禁止缺少状态锁（data-state !== 'idle' 直接 return），否则用户连点 3 次会动画鬼畜",
+        "禁止动画修改 top/left/width，仅允许动 transform、opacity、stroke-dashoffset 与 background-color",
+        "禁止省略 prefers-reduced-motion 降级：减弱动效模式下跳过飞出轨迹，直接淡切文案与状态色"
+      ],
+      "self_check": [
+        "按住按钮不松手时，是否稳定停留在按压缩放态而非立即触发发送？",
+        "连续快速点击 5 次，是否仅完整执行一次状态机周期且宽度零抖动？",
+        "完成后对勾是否为平滑绘制出现，而不是生硬瞬现？"
+      ],
+      "code_snippet": "<style>\n.send-btn {\n  --press-scale: 0.96; --fly-ms: 480ms; --check-ms: 360ms;\n  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);\n  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px;\n  min-width: 136px; padding: 11px 20px; border: 0; border-radius: 12px; cursor: pointer;\n  background: #0071e3; color: #fff; font: 600 14px/1 system-ui, sans-serif;\n  transition: transform 90ms var(--ease-out), background-color 260ms var(--ease-out);\n}\n.send-btn:active { transform: scale(var(--press-scale)); }\n.send-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }\n.send-btn .plane { transition: transform var(--fly-ms) var(--ease-out), opacity 320ms; }\n.send-btn .check { position: absolute; left: 20px; stroke-dasharray: 24; stroke-dashoffset: 24; opacity: 0; }\n.send-btn[data-state=\"sending\"] { background: #3a3a3c; cursor: wait; }\n.send-btn[data-state=\"sending\"] .plane { transform: translate(22px, -22px) scale(0.6); opacity: 0; }\n.send-btn[data-state=\"sent\"] { background: #1d7a35; }\n.send-btn[data-state=\"sent\"] .plane { opacity: 0; }\n.send-btn[data-state=\"sent\"] .check { opacity: 1; stroke-dashoffset: 0; transition: stroke-dashoffset var(--check-ms) var(--ease-out), opacity 180ms; }\n@media (prefers-reduced-motion: reduce) { .send-btn, .send-btn * { transition-duration: 0.01ms !important; } }\n</style>\n<button class=\"send-btn\" data-state=\"idle\">\n  <svg class=\"plane\" viewBox=\"0 0 24 24\"><path d=\"M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z\"/></svg>\n  <svg class=\"check\" viewBox=\"0 0 24 24\"><path d=\"M5 13l4 4L19 7\"/></svg>\n  <span class=\"label\">发送行程</span>\n</button>\n<script>\nconst btn = document.querySelector('.send-btn');\nconst label = btn.querySelector('.label');\nbtn.addEventListener('click', () => {\n  if (btn.dataset.state !== 'idle') return;\n  btn.dataset.state = 'sending'; label.textContent = '发送中…';\n  setTimeout(() => { btn.dataset.state = 'sent'; label.textContent = '已发送'; }, 650);\n  setTimeout(() => { btn.dataset.state = 'idle'; label.textContent = '发送行程'; }, 2100);\n});\n</script>",
+      "specimen_url": "specimens/send-flight-receipt.html",
+      "logical_size": [
+        560,
+        340
+      ],
+      "featured": false
+    },
+    {
+      "id": "origin-growth-menu",
+      "category": "feedback-receipts",
+      "name_cn": "原点生长菜单",
+      "name_en": "Origin-Anchored Menu",
+      "demo": {
+        "kind": "rec",
+        "variant": "menu"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "press",
+        "click"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "弹窗突兀",
+        "右键菜单",
+        "下拉菜单生硬",
+        "长按菜单",
+        "popover",
+        "context menu"
+      ],
+      "essence": "菜单必须锚定触发点 via transform-origin，从 0.72× 弹性生长而非凭空淡现，让因果关系一目了然。",
+      "when_to_use": [
+        "操作按钮的更多菜单、气泡操作栏、上下文右键/长按菜单"
+      ],
+      "when_not_to_use": [
+        "选项超过 10 条或需要搜索过滤的长列表（应使用命令面板或抽屉）"
+      ],
+      "tokens": {
+        "--menu-scale-from": "0.72",
+        "--menu-ms": "280ms",
+        "--ease-snap": "cubic-bezier(0.22, 1, 0.36, 1)"
+      },
+      "knobs": [
+        {
+          "key": "--menu-scale-from",
+          "label": "初始缩放",
+          "unit": "",
+          "min": 0.5,
+          "max": 0.95,
+          "step": 0.02,
+          "default": 0.72
+        },
+        {
+          "key": "--menu-ms",
+          "label": "展开耗时",
+          "unit": "ms",
+          "min": 140,
+          "max": 520,
+          "step": 20,
+          "default": 280
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          1.0,
+          0.36,
+          1.0
+        ],
+        "label": "Crisp Pop · 轻弹展开"
+      },
+      "state_machine": [
+        {
+          "state": "closed",
+          "trigger": "初始态 / 点击外部 / Esc",
+          "visual": "opacity:0; transform: scale(var(--menu-scale-from)) translateY(6px); pointer-events:none",
+          "timing": "180ms"
+        },
+        {
+          "state": "open",
+          "trigger": "点击触发按钮",
+          "visual": "沿 transform-origin: bottom center 生长至 scale(1) translateY(0)",
+          "timing": "var(--menu-ms)"
+        },
+        {
+          "state": "selected",
+          "trigger": "点击菜单项",
+          "visual": "立即收起并把选择结果写回状态读数",
+          "timing": "160ms"
+        }
+      ],
+      "do_not": [
+        "禁止忘记设置 transform-origin（默认 50% 50% 会让菜单像在半空凭空变大，割裂触发因果）",
+        "禁止用 display:none 硬切导致退出动画丢失，应用 opacity + pointer-events + visibility 组合",
+        "禁止漏掉 Escape 键与点击空白区域关闭菜单的监听",
+        "禁止给菜单加上超过 350ms 的慢速弹跳，高频工具菜单必须干脆利落"
+      ],
+      "self_check": [
+        "菜单放大展开的基准点是否紧贴触发按钮边缘？",
+        "点击菜单外部或按 Esc 键是否能平滑收起？",
+        "菜单关闭态下鼠标滑过该区域是否不会误拦截点击（pointer-events: none）？"
+      ],
+      "code_snippet": "<style>\n.menu-wrap { --menu-scale-from: 0.72; --menu-ms: 280ms; position: relative; display: inline-block; }\n.menu-trigger { padding: 9px 16px; border: 1px solid rgba(0,0,0,.14); border-radius: 10px; background: #fff; font: 600 13px/1 system-ui; cursor: pointer; transition: transform 90ms; }\n.menu-trigger:active { transform: scale(0.96); }\n.menu-pop {\n  position: absolute; left: 50%; bottom: calc(100% + 8px); width: 136px; padding: 5px;\n  background: #fff; border: 1px solid rgba(0,0,0,.1); border-radius: 12px;\n  box-shadow: 0 14px 32px -10px rgba(0,0,0,.18);\n  transform-origin: 50% 100%; opacity: 0; pointer-events: none;\n  transform: translate(-50%, 6px) scale(var(--menu-scale-from));\n  transition: transform var(--menu-ms) cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms;\n}\n.menu-pop.open { opacity: 1; pointer-events: auto; transform: translate(-50%, 0) scale(1); }\n.menu-pop button { display: block; width: 100%; border: 0; background: none; text-align: left; padding: 7px 10px; border-radius: 7px; font-size: 13px; cursor: pointer; }\n.menu-pop button:hover { background: #f3f1ea; }\n</style>\n<div class=\"menu-wrap\">\n  <button class=\"menu-trigger\" aria-expanded=\"false\">更多操作</button>\n  <div class=\"menu-pop\" role=\"menu\">\n    <button role=\"menuitem\">收藏到清单</button>\n    <button role=\"menuitem\">复制链接</button>\n    <button role=\"menuitem\">置顶卡片</button>\n  </div>\n</div>",
+      "specimen_url": "specimens/origin-growth-menu.html",
+      "logical_size": [
+        560,
+        340
+      ],
+      "featured": false
+    },
+    {
+      "id": "smooth-accordion-reveal",
+      "category": "feedback-receipts",
+      "name_cn": "平滑手风琴展开",
+      "name_en": "Smooth Accordion Reveal",
+      "demo": {
+        "kind": "rec",
+        "variant": "acc"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "click"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "折叠面板生硬",
+        "FAQ展开",
+        "手风琴",
+        "高度动画卡顿",
+        "accordion",
+        "collapsible"
+      ],
+      "essence": "利用 CSS Grid 0fr → 1fr 驱动自然高度展开，无需硬编码 max-height，同时旋转指示图标回执状态。",
+      "when_to_use": [
+        "FAQ 问答、设置面板分组、侧栏可折叠参数区"
+      ],
+      "when_not_to_use": [
+        "需要同时对比两项全部内容的场景（建议用 Tab 或左右分栏）"
+      ],
+      "tokens": {
+        "--acc-ms": "340ms",
+        "--ease-out": "cubic-bezier(0.22, 1, 0.36, 1)"
+      },
+      "knobs": [
+        {
+          "key": "--acc-ms",
+          "label": "展开耗时",
+          "unit": "ms",
+          "min": 160,
+          "max": 680,
+          "step": 20,
+          "default": 340
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          1.0,
+          0.36,
+          1.0
+        ],
+        "label": "Smooth Height · 平滑让位"
+      },
+      "state_machine": [
+        {
+          "state": "collapsed",
+          "trigger": "初始态 / 再次点击",
+          "visual": "grid-template-rows: 0fr，内部文字 opacity: 0，图标 0°",
+          "timing": "var(--acc-ms)"
+        },
+        {
+          "state": "expanded",
+          "trigger": "点击标题栏",
+          "visual": "grid-template-rows: 1fr，内容平滑撑开下方元素，加号旋 45°",
+          "timing": "var(--acc-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止用 max-height: 9999px 凑合动画（会导致收起时前半段出现明显空等延迟）",
+        "禁止直接过渡 height: auto（CSS 不支持 auto 插值，会瞬间跳变）",
+        "禁止忘记给 grid 子容器加 overflow: hidden 与 min-height: 0，否则无法折叠至 0",
+        "禁止省略 aria-expanded 属性，键盘与读屏用户无法感知折叠态"
+      ],
+      "self_check": [
+        "收起动作是否在点击瞬间立即响应，无任何“空等延迟”？",
+        "切换不同长短的文案内容时，是否无需修改 CSS 高度就能完整显示？",
+        "指示图标旋转与内容展开是否同步结束？"
+      ],
+      "code_snippet": "<style>\n.acc-item { --acc-ms: 340ms; border: 1px solid rgba(0,0,0,.1); border-radius: 12px; background: #fff; overflow: hidden; }\n.acc-head { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border: 0; background: none; font: 600 13.5px/1.3 system-ui; cursor: pointer; }\n.acc-head svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; transition: transform var(--acc-ms) cubic-bezier(0.22,1,0.36,1); }\n.acc-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--acc-ms) cubic-bezier(0.22,1,0.36,1); }\n.acc-inner { overflow: hidden; min-height: 0; }\n.acc-inner p { margin: 0; padding: 0 14px 13px; font-size: 13px; color: #57503f; line-height: 1.55; }\n.acc-item.open .acc-body { grid-template-rows: 1fr; }\n.acc-item.open .acc-head svg { transform: rotate(45deg); }\n</style>\n<div class=\"acc-item open\">\n  <button class=\"acc-head\" aria-expanded=\"true\"><span>为什么不用 max-height？</span><svg viewBox=\"0 0 16 16\"><path d=\"M8 3v10M3 8h10\"/></svg></button>\n  <div class=\"acc-body\"><div class=\"acc-inner\"><p>grid-template-rows 从 0fr 到 1fr 能精确贴合任意内容高度，收起无延迟。</p></div></div>\n</div>",
+      "specimen_url": "specimens/smooth-accordion-reveal.html",
+      "logical_size": [
+        560,
+        340
+      ],
+      "featured": false
+    },
+    {
+      "id": "stroke-check-select",
+      "category": "feedback-receipts",
+      "name_cn": "描边勾选多选",
+      "name_en": "Stroke-Draw Multi-Select",
+      "demo": {
+        "kind": "rec",
+        "variant": "sel"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "press",
+        "click"
+      ],
+      "tech": [
+        "css-transition",
+        "svg-stroke"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "复选框呆板",
+        "多选卡片",
+        "勾号动画",
+        "checkbox",
+        "multi select"
+      ],
+      "essence": "选中时先由框体填色，再以 SVG stroke-dashoffset 绘出对勾并高亮整行边框，给予双重确认。",
+      "when_to_use": [
+        "任务清单、权限多选、批量筛选卡片列表"
+      ],
+      "when_not_to_use": [
+        "互斥单选（应使用圆形单选框或分段控件以遵循心智模型）"
+      ],
+      "tokens": {
+        "--check-ms": "240ms",
+        "--accent": "#0071e3"
+      },
+      "knobs": [
+        {
+          "key": "--check-ms",
+          "label": "描边耗时",
+          "unit": "ms",
+          "min": 120,
+          "max": 520,
+          "step": 20,
+          "default": 240
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          1.0,
+          0.36,
+          1.0
+        ],
+        "label": "Draw Snap · 一笔落勾"
+      },
+      "state_machine": [
+        {
+          "state": "unchecked",
+          "trigger": "初始态",
+          "visual": "浅边框卡片，空心圆角方框，SVG stroke-dashoffset: 20",
+          "timing": "—"
+        },
+        {
+          "state": "checked",
+          "trigger": "click / Space",
+          "visual": "方框填主色，对勾沿路径描出至 0，卡片边框染 40% 主色",
+          "timing": "var(--check-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止只给小方框本身绑定点击事件，整行选项卡片都必须是可点击热区",
+        "禁止用静态实体图片替代 SVG 路径，导致无法实现平滑描边与主题色跟随",
+        "禁止忽略 aria-pressed 或原生 checkbox 语义，破坏键盘 Tab+Space 操作",
+        "禁止选中后改变 border-width（如 1px 变 2px）引起布局 1px 跳动，改用 border-color 或 box-shadow"
+      ],
+      "self_check": [
+        "点击文字右侧空白区域是否也能正常勾选整行？",
+        "勾选与取消勾选时，卡片尺寸和上下行距是否零抖动？",
+        "对勾是沿笔画路径绘制而非整块闪烁出现？"
+      ],
+      "code_snippet": "<style>\n.sel-row {\n  --check-ms: 240ms; --accent: #0071e3;\n  display: flex; align-items: center; gap: 10px; width: 220px; padding: 10px 12px;\n  border: 1px solid rgba(0,0,0,.12); border-radius: 11px; background: #fff; cursor: pointer;\n  transition: border-color 200ms, background-color 200ms, transform 90ms;\n}\n.sel-row:active { transform: scale(0.985); }\n.sel-box { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid rgba(0,0,0,.22); display: grid; place-items: center; transition: background-color 180ms, border-color 180ms; }\n.sel-box svg { width: 12px; height: 12px; fill: none; stroke: #fff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 20; stroke-dashoffset: 20; transition: stroke-dashoffset var(--check-ms) cubic-bezier(0.22,1,0.36,1); }\n.sel-row[aria-pressed=\"true\"] { border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: color-mix(in srgb, var(--accent) 5%, #fff); }\n.sel-row[aria-pressed=\"true\"] .sel-box { background: var(--accent); border-color: var(--accent); }\n.sel-row[aria-pressed=\"true\"] .sel-box svg { stroke-dashoffset: 0; }\n</style>\n<button class=\"sel-row\" aria-pressed=\"true\" onclick=\"this.setAttribute('aria-pressed', this.getAttribute('aria-pressed')!=='true')\">\n  <span class=\"sel-box\"><svg viewBox=\"0 0 16 16\"><path d=\"M3 8.5l3.2 3.2L13 4.5\"/></svg></span>\n  <span>自动保存草稿</span>\n</button>",
+      "specimen_url": "specimens/stroke-check-select.html",
+      "logical_size": [
+        560,
+        340
+      ],
+      "featured": false
+    },
+    {
+      "id": "vertical-roller-stepper",
+      "category": "feedback-receipts",
+      "name_cn": "纵滚数字步进器",
+      "name_en": "Vertical Roller Stepper",
+      "demo": {
+        "kind": "rec",
+        "variant": "step"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "press",
+        "click"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "数量加减生硬",
+        "数字跳变",
+        "计数器",
+        "步进器",
+        "stepper",
+        "odometer"
+      ],
+      "essence": "将数值放入固定高度的视窗带（strip），通过 translateY 纵向滚过下一格，让数值变化具有机械轮盘般的实体回执。",
+      "when_to_use": [
+        "购物车数量、人数选择、份数/档位微调（范围 0–9 或固定离散值）"
+      ],
+      "when_not_to_use": [
+        "跨度上千的自由数字输入（应配直接键盘输入框，仅在末尾微调时滚动）"
+      ],
+      "tokens": {
+        "--roll-ms": "380ms",
+        "--ease-snap": "cubic-bezier(0.22, 1, 0.36, 1)"
+      },
+      "knobs": [
+        {
+          "key": "--roll-ms",
+          "label": "滚动耗时",
+          "unit": "ms",
+          "min": 140,
+          "max": 700,
+          "step": 20,
+          "default": 380
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          1.0,
+          0.36,
+          1.0
+        ],
+        "label": "Detent Roll · 机械卡位"
+      },
+      "state_machine": [
+        {
+          "state": "value = n",
+          "trigger": "点击 + / −",
+          "visual": "数字条沿 Y 轴平滑移动 -n × 100%（带 tabular-nums 等宽）",
+          "timing": "var(--roll-ms)"
+        },
+        {
+          "state": "boundary",
+          "trigger": "到达最小/最大值",
+          "visual": "对应按钮降低透明度并禁用，防止越界空点",
+          "timing": "150ms"
+        }
+      ],
+      "do_not": [
+        "禁止省略 font-variant-numeric: tabular-nums（不等宽数字滚动时会左右晃动）",
+        "禁止用 innerText 直接替换数字导致毫无方向感（加应向上滚、减应向下滚）",
+        "禁止忘记给视窗容器加 overflow: hidden 与精确匹配的 line-height",
+        "禁止允许连续点击越过 [min, max] 边界造成空白区域露出"
+      ],
+      "self_check": [
+        "点“+”时数字是否沿单一清晰方向滚入，且等宽无水平抖动？",
+        "快速连续点击加减按钮，滚轮是否能平滑追赶目标值不卡死？",
+        "行高与单个 span 高度是否严格一致，无半截数字露边？"
+      ],
+      "code_snippet": "<style>\n.roller { --roll-ms: 380ms; display: inline-flex; align-items: center; gap: 12px; }\n.roller button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(0,0,0,.14); background: #fff; font-size: 16px; cursor: pointer; transition: transform 90ms; }\n.roller button:active { transform: scale(0.92); }\n.roller .win { height: 36px; line-height: 36px; min-width: 28px; overflow: hidden; text-align: center; font: 700 26px/36px system-ui; font-variant-numeric: tabular-nums; }\n.roller .strip { transition: transform var(--roll-ms) cubic-bezier(0.22, 1, 0.36, 1); }\n.roller .strip span { display: block; height: 36px; }\n</style>\n<div class=\"roller\">\n  <button data-d=\"-1\">−</button>\n  <div class=\"win\"><div class=\"strip\"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div></div>\n  <button data-d=\"1\">+</button>\n</div>\n<script>\nlet idx = 1; const strip = document.querySelector('.roller .strip');\nstrip.style.transform = `translateY(${-idx * 36}px)`;\ndocument.querySelectorAll('.roller button').forEach(b => b.onclick = () => {\n  idx = Math.max(0, Math.min(4, idx + Number(b.dataset.d)));\n  strip.style.transform = `translateY(${-idx * 36}px)`;\n});\n</script>",
+      "specimen_url": "specimens/vertical-roller-stepper.html",
+      "logical_size": [
+        560,
+        340
+      ],
+      "featured": false
+    },
+    {
+      "id": "card-3d-flip-receipt",
+      "category": "feedback-receipts",
+      "name_cn": "3D 翻面确认",
+      "name_en": "3D Card Flip Receipt",
+      "demo": {
+        "kind": "rec",
+        "variant": "flip"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "click"
+      ],
+      "tech": [
+        "css-3d",
+        "css-transition"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "卡片翻转",
+        "正反面切换",
+        "凭证揭示",
+        "3d flip",
+        "card flip"
+      ],
+      "essence": "借助 perspective + transform-style: preserve-3d 与 backface-visibility: hidden，把状态切换表达为“翻到背面看结果”。",
+      "when_to_use": [
+        "电子凭证/核销码展示、词汇记忆卡、前后状态对比揭示"
+      ],
+      "when_not_to_use": [
+        "包含长表单或需要滚动阅读的复杂面板（翻面会打断阅读与焦点）"
+      ],
+      "tokens": {
+        "--flip-ms": "520ms",
+        "--perspective": "480px",
+        "--ease-out": "cubic-bezier(0.22, 1, 0.36, 1)"
+      },
+      "knobs": [
+        {
+          "key": "--flip-ms",
+          "label": "翻转耗时",
+          "unit": "ms",
+          "min": 240,
+          "max": 900,
+          "step": 20,
+          "default": 520
+        },
+        {
+          "key": "--perspective",
+          "label": "透视景深",
+          "unit": "px",
+          "min": 240,
+          "max": 1000,
+          "step": 40,
+          "default": 480
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          1.0,
+          0.36,
+          1.0
+        ],
+        "label": "3D Turn · 实体翻面"
+      },
+      "state_machine": [
+        {
+          "state": "front",
+          "trigger": "初始态",
+          "visual": "rotateY(0deg)，正面可见，背面隐藏",
+          "timing": "—"
+        },
+        {
+          "state": "flipped",
+          "trigger": "click / Enter / Space",
+          "visual": "内层容器 rotateY(180deg)，呈现背面强调色与回执信息",
+          "timing": "var(--flip-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止把 perspective 和 rotateY 写在同一个元素上（透视容器必须在父级，旋转体在子级）",
+        "禁止忘记给正反两面都写 backface-visibility: hidden，否则旋转过 90° 后会出现镜像字穿帮",
+        "禁止省略键盘 tabindex='0' 与 Enter/Space 触发支持",
+        "禁止在低对比度透明背景上翻转，应赋予正反面清晰材质区分"
+      ],
+      "self_check": [
+        "翻转过 90° 瞬间是否干净切换为背面，无镜像文字透出？",
+        "perspective 设在最外层容器上，翻转边缘是否呈现近大远小的真实透视？",
+        "聚焦卡片按 Enter 或 Space 键能否触发翻转？"
+      ],
+      "code_snippet": "<style>\n.flip-card { --flip-ms: 520ms; --perspective: 480px; width: 148px; height: 96px; perspective: var(--perspective); cursor: pointer; }\n.flip-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform var(--flip-ms) cubic-bezier(0.22, 1, 0.36, 1); }\n.flip-card.flipped .flip-inner { transform: rotateY(180deg); }\n.flip-face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 14px; display: grid; place-items: center; font: 600 13px/1 system-ui; }\n.flip-front { background: #f7f4ec; border: 1px solid rgba(0,0,0,.1); color: #221d15; }\n.flip-back { background: #0071e3; color: #fff; transform: rotateY(180deg); }\n</style>\n<div class=\"flip-card\" role=\"button\" tabindex=\"0\" onclick=\"this.classList.toggle('flipped')\">\n  <div class=\"flip-inner\">\n    <div class=\"flip-face flip-front\">点击查看凭证</div>\n    <div class=\"flip-face flip-back\">✓ 已核销 · #A82</div>\n  </div>\n</div>",
+      "specimen_url": "specimens/card-3d-flip-receipt.html",
+      "logical_size": [
+        560,
+        340
+      ],
+      "featured": false
+    },
+    {
+      "id": "tactile-chip-filter",
+      "category": "feedback-receipts",
+      "name_cn": "胶囊填色筛选",
+      "name_en": "Tactile Chip Filter",
+      "demo": {
+        "kind": "rec",
+        "variant": "filt"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "press",
+        "click"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "筛选项没状态",
+        "标签过滤",
+        "filter chips",
+        "tag filter"
+      ],
+      "essence": "筛选胶囊按下即实心填色，同时联动下方结果条收窄或刷新，让“筛子生效”瞬间可见。",
+      "when_to_use": [
+        "列表顶部多维快筛、画廊标签切换、搜索结果二次过滤"
+      ],
+      "when_not_to_use": [
+        "筛选维度超过 12 个时不应全部平铺，应折叠进下拉面板"
+      ],
+      "tokens": {
+        "--chip-ms": "200ms",
+        "--accent": "#0071e3"
+      },
+      "knobs": [
+        {
+          "key": "--chip-ms",
+          "label": "填色耗时",
+          "unit": "ms",
+          "min": 80,
+          "max": 420,
+          "step": 20,
+          "default": 200
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          1.0,
+          0.36,
+          1.0
+        ],
+        "label": "Instant Tint · 即时填色"
+      },
+      "state_machine": [
+        {
+          "state": "inactive",
+          "trigger": "默认态",
+          "visual": "描边胶囊，次级墨水色",
+          "timing": "—"
+        },
+        {
+          "state": "active",
+          "trigger": "click",
+          "visual": "实心主色填满 + 白色字，下方结果摘要即时更新",
+          "timing": "var(--chip-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止选中后字重突然从 400 跳到 700 导致胶囊变宽、整排标签抖动换行（应保持统一字重）",
+        "禁止只改标签样式而不给结果区任何反馈（哪怕是结果数变化或骨架微闪）",
+        "禁止用过暗的灰底代表选中，必须与未选态形成一眼可辨的高对比反差",
+        "禁止省略 aria-pressed 状态属性"
+      ],
+      "self_check": [
+        "来回点击不同胶囊时，整排标签的宽度与位置是否纹丝不动？",
+        "选中态与未选中态的对比度是否一眼分明？",
+        "是否同步反馈了筛选后的命中结果变化？"
+      ],
+      "code_snippet": "<style>\n.chip-group { --chip-ms: 200ms; --accent: #0071e3; display: flex; gap: 8px; flex-wrap: wrap; }\n.chip { border: 1px solid rgba(0,0,0,.14); background: #fff; color: #57503f; border-radius: 999px; padding: 6px 14px; font: 600 12.5px/1 system-ui; cursor: pointer; transition: background-color var(--chip-ms), color var(--chip-ms), border-color var(--chip-ms), transform 90ms; }\n.chip:active { transform: scale(0.95); }\n.chip[aria-pressed=\"true\"] { background: var(--accent); color: #fff; border-color: var(--accent); }\n</style>\n<div class=\"chip-group\">\n  <button class=\"chip\" aria-pressed=\"true\">全部</button>\n  <button class=\"chip\" aria-pressed=\"false\">待处理</button>\n  <button class=\"chip\" aria-pressed=\"false\">已完成</button>\n</div>",
+      "specimen_url": "specimens/tactile-chip-filter.html",
+      "logical_size": [
+        560,
+        340
+      ],
+      "featured": false
+    },
+    {
+      "id": "billing-cycle-price-roll",
+      "category": "feedback-receipts",
+      "name_cn": "三步方案进度回执",
+      "name_en": "Three-Step Plan Progress",
+      "demo": {
+        "kind": "rec",
+        "variant": "plan"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "click",
+        "state"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "步骤条生硬",
+        "进度条",
+        "多步引导",
+        "stepper progress",
+        "plan progress"
+      ],
+      "essence": "点击「下一步」节点时，进度线平滑延展、当前节点高亮扩张、已完成节点落定对勾，清晰交代多步行程进度。",
+      "when_to_use": [
+        "SaaS 定价页月付/年付切换、套餐容量档位切换"
+      ],
+      "when_not_to_use": [
+        "多达 5 种以上复杂组合定价（应使用对比表格）"
+      ],
+      "tokens": {
+        "--switch-ms": "260ms",
+        "--ease-out": "cubic-bezier(0.22, 1, 0.36, 1)"
+      },
+      "knobs": [
+        {
+          "key": "--switch-ms",
+          "label": "切换耗时",
+          "unit": "ms",
+          "min": 120,
+          "max": 540,
+          "step": 20,
+          "default": 260
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          1.0,
+          0.36,
+          1.0
+        ],
+        "label": "Snappy Switch · 利落换档"
+      },
+      "state_machine": [
+        {
+          "state": "monthly",
+          "trigger": "点击月付",
+          "visual": "白胶囊落于左槽，价格等宽展示 ¥49 / 月",
+          "timing": "var(--switch-ms)"
+        },
+        {
+          "state": "yearly",
+          "trigger": "点击年付",
+          "visual": "白胶囊落于右槽，价格轻滚切至 ¥39 / 月 并凸显折扣",
+          "timing": "var(--switch-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止价格数字不设 font-variant-numeric: tabular-nums 导致单位“/月”左右晃动",
+        "禁止切换按钮后数字毫无过渡直接硬闪（至少给 160ms–260ms 的位移动态或滚数）",
+        "禁止让两个选项对比度接近，选中胶囊必须有明确的实体底色与轻投影",
+        "禁止隐藏计费周期说明造成价格误导"
+      ],
+      "self_check": [
+        "月付切年付时，“/ 月”后缀是否保持水平稳定不跳动？",
+        "选中胶囊的阴影与反差是否清晰指示当前周期？",
+        "价格切换是否伴随可感知的视觉回执？"
+      ],
+      "code_snippet": "<style>\n.plan-bar { --switch-ms: 260ms; display: inline-flex; padding: 4px; border-radius: 999px; background: #ece7db; gap: 4px; }\n.plan-bar button { border: 0; background: transparent; border-radius: 999px; padding: 7px 16px; font: 600 12.5px/1 system-ui; color: #57503f; cursor: pointer; transition: background-color var(--switch-ms), box-shadow var(--switch-ms), color var(--switch-ms); }\n.plan-bar button.on { background: #fff; color: #1d1a14; box-shadow: 0 2px 6px rgba(0,0,0,.12); }\n.plan-price { margin-top: 12px; font: 700 28px/1.1 system-ui; font-variant-numeric: tabular-nums; transition: transform 180ms, opacity 180ms; }\n.plan-price.swap { transform: translateY(-6px); opacity: 0; }\n</style>\n<div class=\"plan-bar\"><button class=\"on\" data-p=\"49\">月付</button><button data-p=\"39\">年付 · 省 20%</button></div>\n<div class=\"plan-price\">¥<span>49</span> <small>/ 月</small></div>",
+      "specimen_url": "specimens/billing-cycle-price-roll.html",
+      "logical_size": [
+        560,
+        340
+      ],
+      "featured": false
+    },
+    {
+      "id": "tactile-quantity-stepper",
+      "category": "feedback-receipts",
+      "name_cn": "软光影按压步进",
+      "name_en": "Tactile Quantity Stepper",
+      "demo": {
+        "kind": "neu",
+        "variant": "stepper"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "press",
+        "click"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "实体按钮感",
+        "加减按钮",
+        "按压回弹",
+        "quantity control",
+        "tactile button"
+      ],
+      "essence": "以统一左上光源构造外凸实体圆钮，按下瞬间微缩至 0.92× 并收窄投影，给出近似硬件按键的物理触感。",
+      "when_to_use": [
+        "智能家居面板、硬件控制端、极简购物车数量微调"
+      ],
+      "when_not_to_use": [
+        "高密度数据表格内部（软投影需要周围留白呼吸空间）"
+      ],
+      "tokens": {
+        "--press-scale": "0.92",
+        "--press-ms": "140ms"
+      },
+      "knobs": [
+        {
+          "key": "--press-scale",
+          "label": "按压深度",
+          "unit": "",
+          "min": 0.84,
+          "max": 0.98,
+          "step": 0.01,
+          "default": 0.92
+        },
+        {
+          "key": "--press-ms",
+          "label": "回弹耗时",
+          "unit": "ms",
+          "min": 70,
+          "max": 300,
+          "step": 10,
+          "default": 140
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          0.61,
+          0.36,
+          1.0
+        ],
+        "label": "Tactile Press · 硬件按压"
+      },
+      "state_machine": [
+        {
+          "state": "rest",
+          "trigger": "静止态",
+          "visual": "145° 左上高光渐变 + 右下软影，按钮外凸",
+          "timing": "—"
+        },
+        {
+          "state": "pressed",
+          "trigger": ":active",
+          "visual": "scale(var(--press-scale))，数字即时刷新",
+          "timing": "var(--press-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止再给按钮套一圈深色 border（软光影靠明暗面边界立体成型，描边会破坏真实感）",
+        "禁止在不同按钮上混用不同方向的投影光源（全容器必须统一左上角 145° 光源）",
+        "禁止在纯白 #ffffff 底上做新拟态（高光会彻底消失，底色必须略带灰调如 #e8e8ed）",
+        "禁止数字未设 min-width 与 tabular-nums 导致从 9 变 10 时左右按钮外移"
+      ],
+      "self_check": [
+        "数字从 9 变到 10 时，左右两个圆形按钮位置是否完全不动？",
+        "高光在左上、投影在右下，是否与底面灰阶形成清晰凸起？",
+        "按下与松开的手感是否干脆无拖泥带水？"
+      ],
+      "code_snippet": "<style>\n.neu-step { --press-scale: 0.92; --press-ms: 140ms; display: inline-flex; align-items: center; gap: 14px; padding: 18px 24px; border-radius: 16px; background: #e8e8ed; }\n.neu-step button { width: 38px; height: 38px; border: 0; border-radius: 50%; background: linear-gradient(145deg, #fff, #dcdce2); box-shadow: 3px 4px 8px rgba(0,0,0,.15), inset 1px 1px 0 #fff; font-size: 18px; color: #3a3a42; cursor: pointer; transition: transform var(--press-ms) cubic-bezier(0.22,0.61,0.36,1); }\n.neu-step button:active { transform: scale(var(--press-scale)); }\n.neu-step b { min-width: 36px; text-align: center; font: 700 22px/1 system-ui; font-variant-numeric: tabular-nums; color: #222; }\n</style>\n<div class=\"neu-step\"><button>−</button><b>2</b><button>+</button></div>",
+      "specimen_url": "specimens/tactile-quantity-stepper.html",
+      "logical_size": [
+        420,
+        270
+      ],
+      "featured": false
+    },
+    {
+      "id": "spring-overshoot-compare",
+      "category": "feedback-receipts",
+      "name_cn": "弹簧过冲与稳刹对照",
+      "name_en": "Spring Overshoot vs Ease-Out",
+      "demo": {
+        "kind": "anim",
+        "variant": "spring"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "time",
+        "state"
+      ],
+      "tech": [
+        "css-keyframes"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "动画太死板",
+        "弹性动画",
+        "过冲",
+        "spring",
+        "overshoot",
+        "bounce"
+      ],
+      "essence": "通过并排对比 ease-out（稳刹不过冲）与 spring（1.56 过冲回弹），直观校准界面活泼度与克制度。",
+      "when_to_use": [
+        "弹窗弹出、徽章解锁、点赞弹跳、趣味化卡片落位"
+      ],
+      "when_not_to_use": [
+        "严肃金融表格、高频工具提示、全屏页面转场（过冲会引起眩晕与廉价感）"
+      ],
+      "tokens": {
+        "--spring-ms": "800ms",
+        "--spring-curve": "cubic-bezier(0.34, 1.56, 0.64, 1)"
+      },
+      "knobs": [
+        {
+          "key": "--spring-ms",
+          "label": "单程周期",
+          "unit": "ms",
+          "min": 350,
+          "max": 1600,
+          "step": 50,
+          "default": 800
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.34,
+          1.56,
+          0.64,
+          1.0
+        ],
+        "label": "Spring · ~9% 过冲回弹"
+      },
+      "state_machine": [
+        {
+          "state": "ease-out",
+          "trigger": "对照轨",
+          "visual": "平滑加速后稳停于终点，零越界",
+          "timing": "var(--spring-ms)"
+        },
+        {
+          "state": "spring",
+          "trigger": "主轨",
+          "visual": "冲过目标位约 9% 后弹性拉回落定",
+          "timing": "var(--spring-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止把过冲曲线（y2 > 1）用在 opacity 上（透明度超过 1 会被裁切停顿，看起来像卡壳）",
+        "禁止把 y2 调得过高（> 1.8 会像玩具橡胶球一样廉价晃动）",
+        "禁止对全页大面积容器使用过冲，仅用于小巧交互物件或弹窗微缩放",
+        "禁止动画离开视口后继续空转消耗 CPU，必须配合 IntersectionObserver 暂停"
+      ],
+      "self_check": [
+        "过冲曲线是否只作用于 transform 而非 opacity 或 color？",
+        "落定时的回弹幅度是否克制在 6%–12% 区间？",
+        "prefers-reduced-motion 下是否停止往复动画？"
+      ],
+      "code_snippet": "<style>\n.spring-track { --spring-ms: 800ms; width: 180px; display: grid; gap: 16px; }\n.spring-row { position: relative; height: 14px; }\n.spring-row::before { content: \"\"; position: absolute; left: 0; right: 0; top: 6px; height: 2px; background: rgba(0,0,0,.1); }\n.spring-dot { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #0071e3; animation: slide-x var(--spring-ms) cubic-bezier(0.34, 1.56, 0.64, 1) infinite alternate; }\n.spring-row.ease .spring-dot { background: #8e8e93; animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }\n@keyframes slide-x { to { transform: translateX(148px); } }\n</style>\n<div class=\"spring-track\"><div class=\"spring-row ease\"><i class=\"spring-dot\"></i></div><div class=\"spring-row\"><i class=\"spring-dot\"></i></div></div>",
+      "specimen_url": "specimens/spring-overshoot-compare.html",
+      "logical_size": [
+        380,
+        220
+      ],
+      "featured": false
+    },
+    {
+      "id": "glass-drag-bookshelf",
+      "category": "direct-manipulation",
+      "name_cn": "毛玻璃拖拽上架",
+      "name_en": "Frosted Drag Bookshelf",
+      "demo": {
+        "kind": "drag",
+        "variant": "books"
+      },
+      "default_surface": "vivid",
+      "drive": [
+        "drag"
+      ],
+      "tech": [
+        "pointer-events",
+        "backdrop-filter"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "拖拽吸附",
+        "毛玻璃没质感",
+        "书架拖拽",
+        "drag snap",
+        "frosted glass drag"
+      ],
+      "essence": "毛玻璃背后必须有高对比硬边色块，拖动时关闭过渡跟手滑行，经过槽位时邻块微缩放让位，松手弹性吸附归槽。",
+      "when_to_use": [
+        "视觉化书架/面板归档、带槽位吸附的直接操纵卡片、媒体分类器"
+      ],
+      "when_not_to_use": [
+        "纯色背景上（无对比边界时 backdrop-filter 退化成脏灰块）"
+      ],
+      "tokens": {
+        "--glass-blur": "10px",
+        "--snap-ms": "460ms",
+        "--ease-snap": "cubic-bezier(0.22, 0.61, 0.36, 1)"
+      },
+      "knobs": [
+        {
+          "key": "--glass-blur",
+          "label": "玻璃模糊度",
+          "unit": "px",
+          "min": 2,
+          "max": 24,
+          "step": 1,
+          "default": 10
+        },
+        {
+          "key": "--snap-ms",
+          "label": "松手吸附耗时",
+          "unit": "ms",
+          "min": 180,
+          "max": 800,
+          "step": 20,
+          "default": 460
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          0.61,
+          0.36,
+          1.0
+        ],
+        "label": "Magnetic Snap · 磁性归槽"
+      },
+      "state_machine": [
+        {
+          "state": "docked",
+          "trigger": "静止 / 键盘左右键",
+          "visual": "停靠于 3 个预设槽位之一，对应底块点亮，指示点激活",
+          "timing": "var(--snap-ms)"
+        },
+        {
+          "state": "dragging",
+          "trigger": "pointerdown + setPointerCapture",
+          "visual": "transition:none 零延迟跟手，经过的色块轻微抬起/缩放让位",
+          "timing": "0ms (每帧)"
+        },
+        {
+          "state": "snapping",
+          "trigger": "pointerup",
+          "visual": "计算最近槽位，恢复 transition 弹性滑入落定",
+          "timing": "var(--snap-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止在拖动过程（dragging）保留 CSS transition（会导致玻璃块像拖着橡皮筋一样严重粘滞迟钝）",
+        "禁止把毛玻璃放在纯白或纯黑无纹理背景上，背后必须存在清晰色块或边界线，blur 才有光学折射价值",
+        "禁止只绑 mousemove 而不调用 setPointerCapture（鼠标拖出元素边界瞬间就会脱手卡死）",
+        "禁止漏掉 touch-action: none 与键盘 ArrowLeft/ArrowRight 无障碍切槽支持"
+      ],
+      "self_check": [
+        "拖动过程中玻璃块是否 1:1 紧跟光标零延迟，松手后才平滑吸附？",
+        "鼠标快速甩出玻璃块边界再松手，是否仍能正确归槽不卡死？",
+        "透过玻璃边缘是否能清晰看到后方硬边色块的折射变化？"
+      ],
+      "code_snippet": "<style>\n.glass-stage { --glass-blur: 10px; --snap-ms: 460ms; position: relative; height: 180px; border-radius: 14px; overflow: hidden; background: linear-gradient(135deg,#1d3a5f 0 33%,#5f2d3a 33% 66%,#2d5f4a 66%); }\n.glass-tile { position: absolute; top: 50%; left: 0; width: 112px; height: 60px; margin-top: -30px; border-radius: 14px; padding: 0 12px; display: flex; flex-direction: column; justify-content: center;\n  background: rgba(16,20,28,.46); backdrop-filter: blur(var(--glass-blur)) saturate(160%); -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);\n  border: 1px solid rgba(255,255,255,.55); box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 14px 28px -10px rgba(0,0,0,.55);\n  color: #fff; cursor: grab; touch-action: none; transition: transform var(--snap-ms) cubic-bezier(0.22,0.61,0.36,1); }\n.glass-tile.dragging { transition: none; cursor: grabbing; }\n</style>\n<div class=\"glass-stage\"><div class=\"glass-tile\" role=\"slider\" tabindex=\"0\" aria-valuemin=\"1\" aria-valuemax=\"3\" aria-valuenow=\"1\"><b>雾面玻璃</b><small>拖至槽位吸附</small></div></div>",
+      "specimen_url": "specimens/glass-drag-bookshelf.html",
+      "logical_size": [
+        680,
+        404
+      ],
+      "featured": true
+    },
+    {
+      "id": "glass-drag-photo-tray",
+      "category": "direct-manipulation",
+      "name_cn": "照片槽玻璃吸附",
+      "name_en": "Frosted Photo Tray Snap",
+      "demo": {
+        "kind": "drag",
+        "variant": "photos"
+      },
+      "default_surface": "vivid",
+      "drive": [
+        "drag"
+      ],
+      "tech": [
+        "pointer-events",
+        "backdrop-filter"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "照片归类",
+        "相册拖拽",
+        "浮层收纳",
+        "photo tray",
+        "snap dock"
+      ],
+      "essence": "以半透明磨砂选框滑过硬边照片格，实时高亮命中目标并在松手时精准对位，兼顾预览透视与空间定位。",
+      "when_to_use": [
+        "相册分类收纳、素材贴板筛选、视频帧选区游标"
+      ],
+      "when_not_to_use": [
+        "文字密集的表单场景（磨砂叠文字会严重降低可读性）"
+      ],
+      "tokens": {
+        "--glass-blur": "9px",
+        "--snap-ms": "440ms",
+        "--glass-sat": "165%"
+      },
+      "knobs": [
+        {
+          "key": "--glass-blur",
+          "label": "折射模糊",
+          "unit": "px",
+          "min": 2,
+          "max": 22,
+          "step": 1,
+          "default": 9
+        },
+        {
+          "key": "--snap-ms",
+          "label": "归位时长",
+          "unit": "ms",
+          "min": 180,
+          "max": 760,
+          "step": 20,
+          "default": 440
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          0.61,
+          0.36,
+          1.0
+        ],
+        "label": "Soft Dock · 轻吸归位"
+      },
+      "state_machine": [
+        {
+          "state": "over-slot",
+          "trigger": "拖动经过照片块",
+          "visual": "目标照片块 scale(1.04) 提亮，其余退暗",
+          "timing": "200ms"
+        },
+        {
+          "state": "snapped",
+          "trigger": "pointerup",
+          "visual": "玻璃选框对齐槽位中心，底部槽点同步更新",
+          "timing": "var(--snap-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止忘记给玻璃容器加顶部 1px 内高光（inset 0 1px 0 rgba(255,255,255,.55)），否则玻璃失去厚度像脏塑料",
+        "禁止漏写 -webkit-backdrop-filter 导致 Safari 退化为纯半透明黑块",
+        "禁止拖动时触发底层文本选中（应设置 user-select: none）",
+        "禁止吸附计算写死像素宽度，必须基于容器当前 clientWidth 动态算槽位"
+      ],
+      "self_check": [
+        "缩放浏览器窗口后，玻璃块是否依然能准确停靠在 3 个槽位上？",
+        "玻璃上边缘是否有清晰的高光反光线？",
+        "拖动时页面文字是否不会被误选中？"
+      ],
+      "code_snippet": "<style>\n.tray-glass { --glass-blur: 9px; --snap-ms: 440ms; background: rgba(18,22,30,.46); backdrop-filter: blur(var(--glass-blur)) saturate(165%); -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(165%); border: 1px solid rgba(255,255,255,.55); box-shadow: inset 0 1px 0 rgba(255,255,255,.55); border-radius: 12px; transition: transform var(--snap-ms) cubic-bezier(0.22,0.61,0.36,1); touch-action: none; user-select: none; }\n</style>\n<!-- 配合 Pointer Events setPointerCapture 与容器宽度动态计算槽位坐标 -->",
+      "specimen_url": "specimens/glass-drag-photo-tray.html",
+      "logical_size": [
+        680,
+        404
+      ],
+      "featured": false
+    },
+    {
+      "id": "glass-drag-task-sort",
+      "category": "direct-manipulation",
+      "name_cn": "任务块穿过命中",
+      "name_en": "Frosted Task Sort",
+      "demo": {
+        "kind": "drag",
+        "variant": "tasks"
+      },
+      "default_surface": "vivid",
+      "drive": [
+        "drag"
+      ],
+      "tech": [
+        "pointer-events",
+        "backdrop-filter"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "任务排序",
+        "看板拖动",
+        "命中高亮",
+        "kanban drag",
+        "task sort"
+      ],
+      "essence": "拖动磨砂任务卡穿过不同泳道块时，实时判定最近命中区并反馈高亮，松手无顿挫落入对应状态列。",
+      "when_to_use": [
+        "看板状态流转（待办/进行/完成）、优先级分桶拖拽"
+      ],
+      "when_not_to_use": [
+        "包含 50+ 行的超长纵向列表（应结合虚拟滚动与自动滚屏）"
+      ],
+      "tokens": {
+        "--glass-blur": "8px",
+        "--snap-ms": "420ms"
+      },
+      "knobs": [
+        {
+          "key": "--glass-blur",
+          "label": "磨砂半径",
+          "unit": "px",
+          "min": 2,
+          "max": 20,
+          "step": 1,
+          "default": 8
+        },
+        {
+          "key": "--snap-ms",
+          "label": "落位耗时",
+          "unit": "ms",
+          "min": 160,
+          "max": 720,
+          "step": 20,
+          "default": 420
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          0.61,
+          0.36,
+          1.0
+        ],
+        "label": "Lane Snap · 泳道落位"
+      },
+      "state_machine": [
+        {
+          "state": "grabbed",
+          "trigger": "pointerdown",
+          "visual": "光标变为 grabbing，关闭过渡跟手移动",
+          "timing": "0ms"
+        },
+        {
+          "state": "hit-zone",
+          "trigger": "pointermove 跨越中线",
+          "visual": "命中的目标泳道块放大微亮，实时预览落点",
+          "timing": "220ms"
+        },
+        {
+          "state": "dropped",
+          "trigger": "pointerup",
+          "visual": "卡片平滑归位并更新当前状态标签",
+          "timing": "var(--snap-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止只在松手后才告知用户会落到哪一列（拖动途中必须实时高亮命中目标）",
+        "禁止使用原生 HTML5 drag-and-drop API（其半透明幽灵图无法自定义毛玻璃与弹性吸附）",
+        "禁止拖动越过容器左右边界产生溢出裁切，必须用 Math.max/min 限幅",
+        "禁止忘记处理 pointercancel 事件导致异常中断后永远停留在 dragging 态"
+      ],
+      "self_check": [
+        "拖动卡块越过中线时，目标区块是否立即有视觉高亮反馈？",
+        "拖到最左或最右边缘是否被干净限幅在舞台内部？",
+        "释放指针或触发 pointercancel 后是否必定恢复过渡并落位？"
+      ],
+      "code_snippet": "<script>\n// 核心 Pointer Capture 限幅与最近槽位吸附骨架\nfunction bindSlotDrag(el, stage, stops = [0.05, 0.5, 0.95], onSlot) {\n  let active = false, startX = 0, baseX = 0, curX = 0;\n  const maxX = () => Math.max(1, stage.clientWidth - el.offsetWidth);\n  const snap = (idx, anim = true) => {\n    curX = stops[idx] * maxX();\n    el.classList.toggle('dragging', !anim);\n    el.style.transform = `translate3d(${curX}px, 0, 0)`;\n    onSlot?.(idx);\n  };\n  el.addEventListener('pointerdown', e => {\n    active = true; startX = e.clientX; baseX = curX;\n    el.classList.add('dragging'); el.setPointerCapture(e.pointerId);\n  });\n  el.addEventListener('pointermove', e => {\n    if (!active) return;\n    curX = Math.max(0, Math.min(maxX(), baseX + e.clientX - startX));\n    el.style.transform = `translate3d(${curX}px, 0, 0)`;\n  });\n  const end = () => {\n    if (!active) return; active = false;\n    const ratio = curX / maxX();\n    const nearest = stops.reduce((b, s, i) => Math.abs(s - ratio) < Math.abs(stops[b] - ratio) ? i : b, 0);\n    snap(nearest, true);\n  };\n  el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);\n}\n</script>",
+      "specimen_url": "specimens/glass-drag-task-sort.html",
+      "logical_size": [
+        680,
+        404
+      ],
+      "featured": false
+    },
+    {
+      "id": "glass-drag-photo-stack",
+      "category": "direct-manipulation",
+      "name_cn": "叠放卡片归槽",
+      "name_en": "Frosted Stack Dock",
+      "demo": {
+        "kind": "drag",
+        "variant": "stack"
+      },
+      "default_surface": "vivid",
+      "drive": [
+        "drag"
+      ],
+      "tech": [
+        "pointer-events",
+        "backdrop-filter"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "叠放卡片",
+        "图层归槽",
+        "卡片堆叠拖拽",
+        "stack drag",
+        "card dock"
+      ],
+      "essence": "在多层叠放的色块影像之间平移磨砂检视层，以位置映射层级索引，松手自动回弹到最近图层槽。",
+      "when_to_use": [
+        "多图层对比、叠放卡片快速浏览、沉浸式媒体堆栈筛选"
+      ],
+      "when_not_to_use": [
+        "需要同时编辑多张卡片文字内容的桌面多任务区"
+      ],
+      "tokens": {
+        "--glass-blur": "10px",
+        "--snap-ms": "480ms"
+      },
+      "knobs": [
+        {
+          "key": "--glass-blur",
+          "label": "磨砂强度",
+          "unit": "px",
+          "min": 2,
+          "max": 24,
+          "step": 1,
+          "default": 10
+        },
+        {
+          "key": "--snap-ms",
+          "label": "归槽时长",
+          "unit": "ms",
+          "min": 180,
+          "max": 800,
+          "step": 20,
+          "default": 480
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          0.61,
+          0.36,
+          1.0
+        ],
+        "label": "Layered Dock · 图层落定"
+      },
+      "state_machine": [
+        {
+          "state": "scanning",
+          "trigger": "pointermove",
+          "visual": "磨砂卡实时折射下方叠放图层边界，当前命中层轻微放大",
+          "timing": "0ms"
+        },
+        {
+          "state": "docked",
+          "trigger": "pointerup",
+          "visual": "平滑停靠至对应图层槽，读数显示当前层序号",
+          "timing": "var(--snap-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止用 left/top 更新拖拽位移（每帧触发重排掉帧），必须使用 translate3d(x, 0, 0)",
+        "禁止多个堆叠卡片使用相同明度导致玻璃滑过时看不出折射变化",
+        "禁止忘记在 ResizeObserver 回调中重算停靠点，避免窗口改宽后卡在半路",
+        "禁止忽略无障碍角色 role='slider' 与 aria-valuenow 更新"
+      ],
+      "self_check": [
+        "拖拽只修改 transform: translate3d 而未触碰 left/top？",
+        "改变容器宽度后，停靠位置是否自动重新对齐？",
+        "三层色块间是否有明显边界以体现毛玻璃折射质感？"
+      ],
+      "code_snippet": "<style>\n.stack-glass { --glass-blur: 10px; --snap-ms: 480ms; will-change: transform; backdrop-filter: blur(var(--glass-blur)) saturate(160%); -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%); transition: transform var(--snap-ms) cubic-bezier(0.22,0.61,0.36,1); }\n.stack-glass.dragging { transition: none; }\n</style>\n<!-- 通过 ResizeObserver 监听容器宽度变化并静默重算当前槽位 translate3d -->",
+      "specimen_url": "specimens/glass-drag-photo-stack.html",
+      "logical_size": [
+        680,
+        404
+      ],
+      "featured": false
+    },
+    {
+      "id": "magnetic-pull-cta",
+      "category": "direct-manipulation",
+      "name_cn": "磁吸引力按钮",
+      "name_en": "Magnetic Pull CTA",
+      "demo": {
+        "kind": "anim",
+        "variant": "mag"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "hover",
+        "pointer"
+      ],
+      "tech": [
+        "pointer-events",
+        "css-transition"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "主按钮没灵魂",
+        "磁吸按钮",
+        "鼠标吸附",
+        "CTA交互",
+        "magnetic button"
+      ],
+      "essence": "当指针进入按钮 82px 感知半径时，按钮沿指针方向轻度位移（最大 14px）产生磁吸感；离开后迅速弹性回中。",
+      "when_to_use": [
+        "官网 Hero 核心 CTA、创意作品集入口按钮、悬浮主操作图标"
+      ],
+      "when_not_to_use": [
+        "高密度工具栏里的成排小按钮（互相拉扯会干扰精准点击）"
+      ],
+      "tokens": {
+        "--mag-radius": "82",
+        "--mag-pull": "14",
+        "--mag-ms": "260ms"
+      },
+      "knobs": [
+        {
+          "key": "--mag-radius",
+          "label": "磁吸半径",
+          "unit": "px",
+          "min": 40,
+          "max": 150,
+          "step": 4,
+          "default": 82
+        },
+        {
+          "key": "--mag-pull",
+          "label": "最大偏移",
+          "unit": "px",
+          "min": 4,
+          "max": 28,
+          "step": 2,
+          "default": 14
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          0.9,
+          0.3,
+          1.0
+        ],
+        "label": "Magnetic Return · 柔吸回弹"
+      },
+      "state_machine": [
+        {
+          "state": "far",
+          "trigger": "距离 > --mag-radius",
+          "visual": "translate3d(0,0,0) 静置原位",
+          "timing": "var(--mag-ms)"
+        },
+        {
+          "state": "attracted",
+          "trigger": "pointermove 进入半径内",
+          "visual": "按相对位移比例牵引至最多 ±--mag-pull px",
+          "timing": "实时跟随"
+        },
+        {
+          "state": "released",
+          "trigger": "pointerleave",
+          "visual": "弹性归零回原位",
+          "timing": "var(--mag-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止把最大偏移设得过大（> 24px 会让按钮“逃离”或遮挡周围元素，反而难点击）",
+        "禁止在按钮自身上监听 pointermove 而忽略外层感应热区（靠近按钮前就应开始微吸）",
+        "禁止在触屏设备（pointer: coarse）或 prefers-reduced-motion 下强行运行",
+        "禁止忘记在 pointerleave 时归零 transform，导致按钮歪在半路"
+      ],
+      "self_check": [
+        "鼠标从按钮外围 40px 靠近时，按钮是否开始平滑微动迎向光标？",
+        "鼠标快速移出舞台后，按钮是否立刻回正到 (0, 0)？",
+        "点击按钮时不会因位移抖动导致点空？"
+      ],
+      "code_snippet": "<style>\n.mag-zone { --mag-radius: 82; --mag-pull: 14; --mag-ms: 260ms; padding: 48px; display: inline-grid; place-items: center; }\n.mag-btn { padding: 12px 24px; border: 0; border-radius: 12px; background: #0071e3; color: #fff; font: 600 14px/1 system-ui; cursor: pointer; will-change: transform; transition: transform var(--mag-ms) cubic-bezier(0.22,0.9,0.3,1); }\n</style>\n<div class=\"mag-zone\"><button class=\"mag-btn\">开始体验</button></div>\n<script>\nconst zone = document.querySelector('.mag-zone'), btn = zone.querySelector('.mag-btn');\nzone.addEventListener('pointermove', e => {\n  const s = getComputedStyle(zone);\n  const R = parseFloat(s.getPropertyValue('--mag-radius')) || 82;\n  const P = parseFloat(s.getPropertyValue('--mag-pull')) || 14;\n  const r = btn.getBoundingClientRect();\n  const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);\n  const d = Math.hypot(dx, dy);\n  if (d < R) btn.style.transform = `translate3d(${(dx / R * P).toFixed(1)}px, ${(dy / R * P).toFixed(1)}px, 0)`;\n  else btn.style.transform = '';\n});\nzone.addEventListener('pointerleave', () => { btn.style.transform = ''; });\n</script>",
+      "specimen_url": "specimens/magnetic-pull-cta.html",
+      "logical_size": [
+        380,
+        220
+      ],
+      "featured": false
+    },
+    {
+      "id": "perspective-tilt-glare",
+      "category": "direct-manipulation",
+      "name_cn": "3D 指针倾斜反光",
+      "name_en": "3D Tilt & Glare",
+      "demo": {
+        "kind": "anim",
+        "variant": "tilt"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "hover",
+        "pointer"
+      ],
+      "tech": [
+        "css-3d",
+        "pointer-events"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "卡片平淡",
+        "3D倾斜",
+        "会员卡质感",
+        "金属反光",
+        "3d tilt",
+        "card glare"
+      ],
+      "essence": "以指针相对卡片中心的归一化坐标驱动 ±12° 内的 rotateX / rotateY，配合柔和金属高光层塑造实体卡片厚度。",
+      "when_to_use": [
+        "会员卡、权益券、展示型作品封面、硬件产品特写卡"
+      ],
+      "when_not_to_use": [
+        "承载密集正文或表单输入框的业务卡片（倾斜会导致文字模糊与点击偏移）"
+      ],
+      "tokens": {
+        "--tilt-max": "12",
+        "--perspective": "600px",
+        "--tilt-ms": "180ms"
+      },
+      "knobs": [
+        {
+          "key": "--tilt-max",
+          "label": "最大倾角",
+          "unit": "°",
+          "min": 4,
+          "max": 24,
+          "step": 2,
+          "default": 12
+        },
+        {
+          "key": "--perspective",
+          "label": "透视距离",
+          "unit": "px",
+          "min": 300,
+          "max": 1000,
+          "step": 50,
+          "default": 600
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          0.61,
+          0.36,
+          1.0
+        ],
+        "label": "Gliding Tilt · 顺滑随动"
+      },
+      "state_machine": [
+        {
+          "state": "flat",
+          "trigger": "初始态 / pointerleave",
+          "visual": "rotateX(0) rotateY(0)，回归平面",
+          "timing": "300ms ease-out"
+        },
+        {
+          "state": "tilting",
+          "trigger": "pointermove",
+          "visual": "rotateX(-ny*max) rotateY(nx*max)，表面光泽跟随坐标",
+          "timing": "var(--tilt-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止倾角超过 ±18°（过大倾角会导致卡片边缘锯齿、文字失真且显得廉价浮夸）",
+        "禁止把 rotateX 的正负号写反（指针移到上半边时，卡片上沿应向后倾、即正 rotateX）",
+        "禁止在卡片上写过长的 transition（> 250ms 会让倾斜明显滞后于鼠标）",
+        "禁止忘记设置外层容器 perspective，否则 3D 旋转退化成二维压扁"
+      ],
+      "self_check": [
+        "鼠标移向卡片右上角时，右上角是否呈现自然的立体倾斜方向？",
+        "鼠标移出卡片后是否平滑回正至完全水平？",
+        "文字与边框是否保持清晰无严重锯齿？"
+      ],
+      "code_snippet": "<style>\n.tilt-wrap { --tilt-max: 12; --perspective: 600px; perspective: var(--perspective); display: inline-block; }\n.tilt-card { width: 220px; height: 136px; border-radius: 16px; background: linear-gradient(145deg, #ffffff, #e5e4ea); border: 1px solid rgba(0,0,0,.08); box-shadow: 0 12px 28px -10px rgba(0,0,0,.16); display: grid; place-items: center; font: 600 13px/1 system-ui; transition: transform 180ms ease-out; will-change: transform; }\n</style>\n<div class=\"tilt-wrap\"><div class=\"tilt-card\">3D 实体卡片</div></div>\n<script>\nconst wrap = document.querySelector('.tilt-wrap'), card = wrap.querySelector('.tilt-card');\ncard.addEventListener('pointermove', e => {\n  const max = parseFloat(getComputedStyle(wrap).getPropertyValue('--tilt-max')) || 12;\n  const r = card.getBoundingClientRect();\n  const nx = (e.clientX - r.left) / r.width - 0.5, ny = (e.clientY - r.top) / r.height - 0.5;\n  card.style.transform = `rotateX(${(-ny * max * 2).toFixed(1)}deg) rotateY(${(nx * max * 2).toFixed(1)}deg)`;\n});\ncard.addEventListener('pointerleave', () => { card.style.transform = ''; });\n</script>",
+      "specimen_url": "specimens/perspective-tilt-glare.html",
+      "logical_size": [
+        380,
+        220
+      ],
+      "featured": true
+    },
+    {
+      "id": "radial-cursor-spotlight",
+      "category": "direct-manipulation",
+      "name_cn": "指针径向聚光",
+      "name_en": "Cursor Radial Spotlight",
+      "demo": {
+        "kind": "anim",
+        "variant": "spot"
+      },
+      "default_surface": "dark",
+      "drive": [
+        "hover",
+        "pointer"
+      ],
+      "tech": [
+        "pointer-events",
+        "css-transition"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "深色卡片死板",
+        "鼠标光斑",
+        "聚光灯",
+        "spotlight",
+        "glow hover"
+      ],
+      "essence": "仅通过更新 --mx / --my 两个 CSS 变量驱动伪元素 radial-gradient，零重排地在深色卡片上投射一束跟手环境光。",
+      "when_to_use": [
+        "深色 Bento 功能网格、开发者工具特性卡片、暗黑模式控制台"
+      ],
+      "when_not_to_use": [
+        "亮白浅底页面（浅底上高饱和光斑会显脏，应改用微阴影上浮）"
+      ],
+      "tokens": {
+        "--spot-size": "120px",
+        "--spot-alpha": "0.45"
+      },
+      "knobs": [
+        {
+          "key": "--spot-size",
+          "label": "光斑半径",
+          "unit": "px",
+          "min": 60,
+          "max": 240,
+          "step": 10,
+          "default": 120
+        },
+        {
+          "key": "--spot-alpha",
+          "label": "光斑强度",
+          "unit": "",
+          "min": 0.15,
+          "max": 0.85,
+          "step": 0.05,
+          "default": 0.45
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          1.0,
+          0.36,
+          1.0
+        ],
+        "label": "Ambient Fade · 柔光显隐"
+      },
+      "state_machine": [
+        {
+          "state": "idle",
+          "trigger": "指针在外部",
+          "visual": "伪元素光层 opacity: 0，深色表面克制沉稳",
+          "timing": "300ms"
+        },
+        {
+          "state": "lit",
+          "trigger": "pointermove / focus-within",
+          "visual": "光层淡入并紧随 --mx/--my 照亮局部材质",
+          "timing": "即时跟随"
+        }
+      ],
+      "do_not": [
+        "禁止用 JS 每帧拼接一整段新的 background 字符串，只需更新 --mx 和 --my 两个 CSS 变量",
+        "禁止把光斑伪元素挡住卡片文字点击（必须写 pointer-events: none）",
+        "禁止使用刺眼的高饱和彩虹色光斑，深色界面应用低饱和品牌单色或冷白光",
+        "禁止在卡片未 hover 时常亮死光斑，失去“手电筒探索”的精致感"
+      ],
+      "self_check": [
+        "指针滑入和滑出时，光斑是平滑淡入淡出而非突然闪断？",
+        "光层是否设置了 pointer-events: none 不影响内部按钮点击？",
+        "是否只通过 --mx / --my 更新坐标，性能零卡顿？"
+      ],
+      "code_snippet": "<style>\n.spot-card {\n  --spot-size: 120px; --spot-alpha: 0.45;\n  position: relative; width: 220px; height: 130px; border-radius: 14px; overflow: hidden;\n  background: #1c1d20; border: 1px solid rgba(255,255,255,.12); color: #f2f0e9;\n  display: grid; place-items: center; font: 600 13px/1 system-ui;\n}\n.spot-card::before {\n  content: \"\"; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 280ms;\n  background: radial-gradient(var(--spot-size) circle at var(--mx, 50%) var(--my, 50%), rgba(41,151,255,var(--spot-alpha)), transparent 65%);\n}\n.spot-card:hover::before { opacity: 1; }\n</style>\n<div class=\"spot-card\"><span>移动指针照亮表面</span></div>\n<script>\nconst sc = document.querySelector('.spot-card');\nsc.addEventListener('pointermove', e => {\n  const r = sc.getBoundingClientRect();\n  sc.style.setProperty('--mx', `${e.clientX - r.left}px`);\n  sc.style.setProperty('--my', `${e.clientY - r.top}px`);\n});\n</script>",
+      "specimen_url": "specimens/radial-cursor-spotlight.html",
+      "logical_size": [
+        380,
+        220
+      ],
+      "featured": false
+    },
+    {
+      "id": "hover-elevation-lift",
+      "category": "direct-manipulation",
+      "name_cn": "悬停微浮影深",
+      "name_en": "Hover Elevation Lift",
+      "demo": {
+        "kind": "anim",
+        "variant": "lift"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "hover"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "可点击感弱",
+        "卡片悬停",
+        "上浮阴影",
+        "hover lift",
+        "card hover"
+      ],
+      "essence": "悬停或键盘聚焦时仅上移 -6px 并加深扩散投影，用克制的海拔变化回答“这张卡片可以点”。",
+      "when_to_use": [
+        "商品卡、文章卡、功能入口卡等一切可点击跳转的卡片容器"
+      ],
+      "when_not_to_use": [
+        "不可点击的纯展示信息块（给不可点元素加上浮会欺骗用户心智）"
+      ],
+      "tokens": {
+        "--lift-y": "-6px",
+        "--lift-ms": "260ms",
+        "--ease-out": "cubic-bezier(0.22, 1, 0.36, 1)"
+      },
+      "knobs": [
+        {
+          "key": "--lift-y",
+          "label": "上浮高度",
+          "unit": "px",
+          "min": -14,
+          "max": -2,
+          "step": 1,
+          "default": -6
+        },
+        {
+          "key": "--lift-ms",
+          "label": "过渡耗时",
+          "unit": "ms",
+          "min": 120,
+          "max": 500,
+          "step": 20,
+          "default": 260
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          1.0,
+          0.36,
+          1.0
+        ],
+        "label": "Gentle Lift · 克制上浮"
+      },
+      "state_machine": [
+        {
+          "state": "rest",
+          "trigger": "默认态",
+          "visual": "translate3d(0,0,0) + 轻贴地投影",
+          "timing": "—"
+        },
+        {
+          "state": "elevated",
+          "trigger": ":hover / :focus-visible",
+          "visual": "translate3d(0, var(--lift-y), 0) + 柔和远距扩散影",
+          "timing": "var(--lift-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止把不可点击的静态卡片做成悬停上浮，误导用户反复点击",
+        "禁止上移超过 10px（过大会在鼠标位于底边时触发悬停闪烁抖动）",
+        "禁止用 margin-top 替代 transform: translateY（会引起整页下方内容抖动）",
+        "禁止只写 :hover 而漏掉 :focus-visible，让键盘用户丢失焦点回执"
+      ],
+      "self_check": [
+        "悬停在卡片最底部 2px 边缘时，是否不会反复鬼畜闪烁？",
+        "上浮时周围其他卡片的位置是否完全静止不受影响？",
+        "按 Tab 键聚焦到此卡片时是否同样触发上浮？"
+      ],
+      "code_snippet": "<style>\n.lift-card {\n  --lift-y: -6px; --lift-ms: 260ms;\n  width: 210px; height: 112px; border-radius: 14px; background: #fff; border: 1px solid rgba(0,0,0,.09);\n  box-shadow: 0 2px 8px -2px rgba(0,0,0,.08); display: grid; place-items: center; cursor: pointer;\n  font: 600 13px/1 system-ui; color: #221d15;\n  transition: transform var(--lift-ms) cubic-bezier(0.22,1,0.36,1), box-shadow var(--lift-ms) cubic-bezier(0.22,1,0.36,1);\n}\n.lift-card:hover, .lift-card:focus-visible {\n  transform: translate3d(0, var(--lift-y), 0);\n  box-shadow: 0 16px 32px -12px rgba(0,0,0,.18);\n}\n</style>\n<button class=\"lift-card\">悬停或 Tab 聚焦</button>",
+      "specimen_url": "specimens/hover-elevation-lift.html",
+      "logical_size": [
+        380,
+        220
+      ],
+      "featured": false
+    },
+    {
+      "id": "rotary-climate-dial",
+      "category": "direct-manipulation",
+      "name_cn": "阻尼温控旋钮",
+      "name_en": "Rotary Precision Dial",
+      "demo": {
+        "kind": "neu",
+        "variant": "dial"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "drag"
+      ],
+      "tech": [
+        "pointer-events",
+        "css-transition"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "旋钮组件",
+        "温度调节",
+        "圆形滑块",
+        "dial",
+        "rotary knob"
+      ],
+      "essence": "外凸表盘包裹内凹中环，按住水平或环向拖动时通过 atan2 / 位移映射 16°C–28°C 刻度，并支持方向键步进。",
+      "when_to_use": [
+        "温控器、音频增益旋钮、调光色温、精密参数微调仪表"
+      ],
+      "when_not_to_use": [
+        "需要快速输入精确多位数金额或日期的商务表单"
+      ],
+      "tokens": {
+        "--dial-ms": "180ms",
+        "--accent": "#0071e3"
+      },
+      "knobs": [
+        {
+          "key": "--dial-ms",
+          "label": "指针阻尼",
+          "unit": "ms",
+          "min": 40,
+          "max": 360,
+          "step": 20,
+          "default": 180
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          0.61,
+          0.36,
+          1.0
+        ],
+        "label": "Damped Dial · 阻尼转盘"
+      },
+      "state_machine": [
+        {
+          "state": "idle",
+          "trigger": "静止",
+          "visual": "指针指向当前温度角度，下方数字实时等宽显示",
+          "timing": "—"
+        },
+        {
+          "state": "turning",
+          "trigger": "pointerdown + move / ArrowKeys",
+          "visual": "指针在 -120° 至 +120° 区间限幅旋转，读数同步变化",
+          "timing": "var(--dial-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止不限制旋转角度导致从最大值直接跳变到最小值（必须 clamp 到 [-120°, +120°]）",
+        "禁止忘记 setPointerCapture 与 touch-action: none，否则拖动时页面跟着滚动或脱手",
+        "禁止缺失当前数值的纯数字读数（只看指针角度无法一眼读出精确数值）",
+        "禁止忽略 role='slider' 与 aria-valuemin/max/now 语义属性"
+      ],
+      "self_check": [
+        "拖到最冷 16°C 或最热 28°C 时是否被稳稳挡住不会回绕？",
+        "聚焦旋钮后按键盘左右/上下方向键能否逐度微调？",
+        "指针旋转中心点是否与表盘圆心严格重合？"
+      ],
+      "code_snippet": "<style>\n.dial-box { --dial-ms: 180ms; display: inline-flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; border-radius: 16px; background: #e8e8ed; }\n.dial { position: relative; width: 92px; height: 92px; border-radius: 50%; background: linear-gradient(145deg,#fff,#dcdce2); box-shadow: 5px 6px 14px rgba(0,0,0,.16), inset 1px 1px 0 #fff; cursor: grab; touch-action: none; }\n.dial .ring { position: absolute; inset: 16px; border-radius: 50%; background: #e8e8ed; box-shadow: inset 2px 2px 5px rgba(0,0,0,.12); }\n.dial .needle { position: absolute; left: 50%; top: 8px; width: 3px; height: 20px; border-radius: 2px; background: #0071e3; transform-origin: 50% 38px; transition: transform var(--dial-ms) cubic-bezier(0.22,0.61,0.36,1); }\n</style>\n<div class=\"dial-box\"><div class=\"dial\" role=\"slider\" tabindex=\"0\" aria-valuemin=\"16\" aria-valuemax=\"28\" aria-valuenow=\"22\"><span class=\"ring\"></span><span class=\"needle\"></span></div><small>22°C</small></div>",
+      "specimen_url": "specimens/rotary-climate-dial.html",
+      "logical_size": [
+        420,
+        270
+      ],
+      "featured": true
+    },
+    {
+      "id": "recessed-volume-slider",
+      "category": "direct-manipulation",
+      "name_cn": "凹槽跟手滑杆",
+      "name_en": "Recessed Track Slider",
+      "demo": {
+        "kind": "neu",
+        "variant": "slider"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "drag"
+      ],
+      "tech": [
+        "pointer-events"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "滑块丑",
+        "进度条拖动",
+        "音量条",
+        "range slider",
+        "scrub bar"
+      ],
+      "essence": "以内凹轨道承接外凸滑块（凹接动、凸见态），点击轨道任意处或拖动滑块实时刷新填充与百分比读数。",
+      "when_to_use": [
+        "音量/亮度调节、参数权重设置、滤镜强度滑杆"
+      ],
+      "when_not_to_use": [
+        "只有 2–3 个固定档位的离散选择（应使用分段控件）"
+      ],
+      "tokens": {
+        "--track-h": "10px",
+        "--thumb-size": "24px",
+        "--accent": "#0071e3"
+      },
+      "knobs": [
+        {
+          "key": "--track-h",
+          "label": "轨道厚度",
+          "unit": "px",
+          "min": 6,
+          "max": 18,
+          "step": 2,
+          "default": 10
+        },
+        {
+          "key": "--thumb-size",
+          "label": "滑钮直径",
+          "unit": "px",
+          "min": 18,
+          "max": 32,
+          "step": 2,
+          "default": 24
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          0.61,
+          0.36,
+          1.0
+        ],
+        "label": "Direct Track · 零延迟跟手"
+      },
+      "state_machine": [
+        {
+          "state": "rest",
+          "trigger": "默认态",
+          "visual": "内凹轨道 + 品牌色填充条 + 外凸圆形滑钮",
+          "timing": "—"
+        },
+        {
+          "state": "scrubbing",
+          "trigger": "pointerdown / move",
+          "visual": "实时按百分比更新填充宽与滑钮位置，支持点击轨道直跳",
+          "timing": "0ms"
+        }
+      ],
+      "do_not": [
+        "禁止只允许拖拽滑钮本身而忽略点击轨道任意位置直接跳转",
+        "禁止给滑块填充宽加长 transition，会导致拖动时进度条拖尾巴滞后于手指",
+        "禁止在滑轨上方缺少精确百分比/数值反馈",
+        "禁止忽略 ArrowLeft / ArrowRight 键盘步进支持"
+      ],
+      "self_check": [
+        "点击轨道 80% 位置，滑钮是否立即跳至 80% 并允许继续拖动？",
+        "拖至 0% 与 100% 两端时，滑钮视觉中心是否干净对齐不越界？",
+        "数值文本是否带 tabular-nums 防止拖动时抖动？"
+      ],
+      "code_snippet": "<style>\n.sl-wrap { --track-h: 10px; --thumb-size: 24px; padding: 20px; border-radius: 14px; background: #e8e8ed; display: inline-flex; align-items: center; gap: 14px; }\n.sl-track { position: relative; width: 160px; height: var(--track-h); border-radius: 999px; background: #e8e8ed; box-shadow: inset 2px 2px 4px rgba(0,0,0,.15), inset -1px -1px 0 rgba(255,255,255,.85); cursor: pointer; touch-action: none; }\n.sl-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 40%; border-radius: 999px; background: rgba(0,113,227,.38); pointer-events: none; }\n.sl-thumb { position: absolute; left: 40%; top: 50%; width: var(--thumb-size); height: var(--thumb-size); border-radius: 50%; transform: translate(-50%,-50%); background: linear-gradient(145deg,#fff,#dcdce2); box-shadow: 2px 3px 7px rgba(0,0,0,.18), inset 1px 1px 0 #fff; }\n</style>\n<div class=\"sl-wrap\"><div class=\"sl-track\" role=\"slider\" tabindex=\"0\" aria-valuenow=\"40\"><span class=\"sl-fill\"></span><span class=\"sl-thumb\"></span></div><b>40%</b></div>",
+      "specimen_url": "specimens/recessed-volume-slider.html",
+      "logical_size": [
+        420,
+        270
+      ],
+      "featured": false
+    },
+    {
+      "id": "sidebar-pill-nav",
+      "category": "navigation-focus",
+      "name_cn": "图文侧栏胶囊选中",
+      "name_en": "Sidebar Pill Navigation",
+      "demo": {
+        "kind": "nav",
+        "variant": "sidebar"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "click",
+        "state"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "侧边栏太土",
+        "导航选中态弱",
+        "后台菜单",
+        "sidebar nav",
+        "active pill"
+      ],
+      "essence": "以整块高反差胶囊反白 + 状态圆点锁定当前项，切换时右侧主指标轻微滚换确认视图已更新。",
+      "when_to_use": [
+        "桌面端 SaaS 控制台、工具应用主导航、文档工作台侧栏"
+      ],
+      "when_not_to_use": [
+        "超过 3 级深度嵌套的树形文件管理器（胶囊反白会喧宾夺主）"
+      ],
+      "tokens": {
+        "--nav-ms": "240ms",
+        "--roll-ms": "320ms",
+        "--accent": "#0071e3"
+      },
+      "knobs": [
+        {
+          "key": "--nav-ms",
+          "label": "选中过渡",
+          "unit": "ms",
+          "min": 100,
+          "max": 480,
+          "step": 20,
+          "default": 240
+        },
+        {
+          "key": "--roll-ms",
+          "label": "指标滚换",
+          "unit": "ms",
+          "min": 140,
+          "max": 600,
+          "step": 20,
+          "default": 320
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.16,
+          1.0,
+          0.3,
+          1.0
+        ],
+        "label": "Apple Ease · 轻快确认"
+      },
+      "state_machine": [
+        {
+          "state": "inactive",
+          "trigger": "未选中项",
+          "visual": "透明底 + 次级墨水色 + 30% 透明度圆点",
+          "timing": "—"
+        },
+        {
+          "state": "hover",
+          "trigger": "指针悬停",
+          "visual": "5% 浅墨水底色提示热区",
+          "timing": "180ms"
+        },
+        {
+          "state": "active",
+          "trigger": "click",
+          "visual": "整块胶囊反转为主色白字，右侧数值轻滚切换",
+          "timing": "var(--nav-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止只改文字颜色或只画一条 2px 细线作为选中态（扫视识别速度太慢）",
+        "禁止给每个菜单项都配上不同高饱和彩色图标，视觉重心必须集中在当前选中胶囊",
+        "禁止选中后改变 padding 或字重导致列表文字水平偏移",
+        "禁止忘记在切换路由时同步更新右侧内容区的微过渡回执"
+      ],
+      "self_check": [
+        "闭眼再睁开 0.5 秒内，能否立刻定位当前激活的是哪一项？",
+        "悬停态与选中态的层级区分是否一眼清楚？",
+        "点击切换后右侧内容数值是否同步更新无生硬闪烁？"
+      ],
+      "code_snippet": "<style>\n.sb-nav { --nav-ms: 240ms; --accent: #0071e3; display: flex; flex-direction: column; gap: 4px; width: 176px; }\n.sb-item { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border: 0; border-radius: 999px; background: transparent; color: #57503f; font: 600 13px/1 system-ui; cursor: pointer; transition: background-color var(--nav-ms), color var(--nav-ms); }\n.sb-item:hover { background: rgba(0,0,0,.05); color: #221d15; }\n.sb-item.on { background: var(--accent); color: #fff; }\n.sb-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .3; margin-left: auto; }\n.sb-item.on .sb-dot { opacity: 1; }\n</style>\n<nav class=\"sb-nav\">\n  <button class=\"sb-item on\"><span>概览</span><i class=\"sb-dot\"></i></button>\n  <button class=\"sb-item\"><span>趋势</span><i class=\"sb-dot\"></i></button>\n  <button class=\"sb-item\"><span>明细</span><i class=\"sb-dot\"></i></button>\n</nav>",
+      "specimen_url": "specimens/sidebar-pill-nav.html",
+      "logical_size": [
+        780,
+        380
+      ],
+      "featured": false
+    },
+    {
+      "id": "grouped-section-nav",
+      "category": "navigation-focus",
+      "name_cn": "分组标题导航",
+      "name_en": "Grouped Section Nav",
+      "demo": {
+        "kind": "nav",
+        "variant": "groups"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "click",
+        "state"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "侧栏菜单太多",
+        "导航分组",
+        "多模块菜单",
+        "grouped sidebar"
+      ],
+      "essence": "用小字号宽字距的分组标签把入口收束为 2–3 块心智组，组内依旧沿用高反差胶囊选中态，降低扫视负荷。",
+      "when_to_use": [
+        "包含 6–14 个功能入口、存在明确模块边界的中大型后台"
+      ],
+      "when_not_to_use": [
+        "总共只有 3–4 个导航项的轻量应用（强行分组反而增加噪音）"
+      ],
+      "tokens": {
+        "--nav-ms": "220ms",
+        "--accent": "#0071e3"
+      },
+      "knobs": [
+        {
+          "key": "--nav-ms",
+          "label": "切换时长",
+          "unit": "ms",
+          "min": 100,
+          "max": 440,
+          "step": 20,
+          "default": 220
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.16,
+          1.0,
+          0.3,
+          1.0
+        ],
+        "label": "Crisp Group · 分组切换"
+      },
+      "state_machine": [
+        {
+          "state": "group-header",
+          "trigger": "静态结构",
+          "visual": "10px 宽字距浅墨色，不可点击，建立空间断层",
+          "timing": "—"
+        },
+        {
+          "state": "active-item",
+          "trigger": "click",
+          "visual": "胶囊实心反白，跨组互斥保持全栏唯一选中",
+          "timing": "var(--nav-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止用厚重分割线横穿每个分组（优先用留白间距 + 小写宽距标题建立分组感）",
+        "禁止让分组标题字号或对比度大于可点击菜单项，喧宾夺主",
+        "禁止在不同分组间允许同时出现两个激活态",
+        "禁止分组超过 4 组且每组只有 1 个菜单项（过度碎片化）"
+      ],
+      "self_check": [
+        "分组标题与可点击菜单项在字号和灰度上是否清晰区分？",
+        "跨组点击时，上一组的选中胶囊是否同步取消？",
+        "视觉重心是否落在激活项而非分组标题上？"
+      ],
+      "code_snippet": "<style>\n.gnav { --nav-ms: 220ms; display: flex; flex-direction: column; gap: 3px; width: 176px; }\n.gnav-label { font: 600 10px/1 system-ui; letter-spacing: .08em; color: #8b8577; padding: 10px 12px 4px; text-transform: uppercase; }\n.gnav button { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border: 0; border-radius: 999px; background: transparent; color: #57503f; font: 600 13px/1 system-ui; cursor: pointer; transition: background-color var(--nav-ms), color var(--nav-ms); }\n.gnav button.on { background: #0071e3; color: #fff; }\n</style>\n<nav class=\"gnav\"><span class=\"gnav-label\">核心数据</span><button class=\"on\">概览</button><button>趋势</button><span class=\"gnav-label\">记录</span><button>明细</button></nav>",
+      "specimen_url": "specimens/grouped-section-nav.html",
+      "logical_size": [
+        780,
+        380
+      ],
+      "featured": false
+    },
+    {
+      "id": "top-capsule-bar",
+      "category": "navigation-focus",
+      "name_cn": "顶部反白胶囊栏",
+      "name_en": "Top Capsule Bar",
+      "demo": {
+        "kind": "nav",
+        "variant": "topcapsule"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "click",
+        "state"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "顶部导航",
+        "分段导航栏",
+        "胶囊Tab",
+        "top nav",
+        "capsule tabs"
+      ],
+      "essence": "将浅灰外槽与实心反白胶囊置顶居中，为下方全宽内容区腾出完整水平视野，适合 3–5 个核心视图切换。",
+      "when_to_use": [
+        "宽屏数据看板、单页工具视图切换、极简产品顶栏"
+      ],
+      "when_not_to_use": [
+        "超过 6 个导航项（横向胶囊条会过长挤压顶栏操作区）"
+      ],
+      "tokens": {
+        "--nav-ms": "240ms",
+        "--accent": "#0071e3"
+      },
+      "knobs": [
+        {
+          "key": "--nav-ms",
+          "label": "切换耗时",
+          "unit": "ms",
+          "min": 100,
+          "max": 480,
+          "step": 20,
+          "default": 240
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.16,
+          1.0,
+          0.3,
+          1.0
+        ],
+        "label": "Capsule Swap · 胶囊切换"
+      },
+      "state_machine": [
+        {
+          "state": "tray",
+          "trigger": "容器底槽",
+          "visual": "4% 墨色圆角大槽收拢所有导航项",
+          "timing": "—"
+        },
+        {
+          "state": "active",
+          "trigger": "click",
+          "visual": "当前项反白为主色胶囊，下方主内容区同步切换",
+          "timing": "var(--nav-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止给外槽与内胶囊设置不匹配的圆角（必须遵循同心圆角或统一 999px 全圆角）",
+        "禁止在胶囊栏内塞入搜索框、头像等异质元素破坏组块纯粹性",
+        "禁止文字折行，必须 white-space: nowrap",
+        "禁止切换时下方主面板高度剧烈跳动"
+      ],
+      "self_check": [
+        "外槽与内部胶囊是否为一致的 999px 同心圆角？",
+        "所有选项均不换行且视觉重心居中？",
+        "切换标签时下方主视图是否平滑衔接？"
+      ],
+      "code_snippet": "<style>\n.top-cap { --nav-ms: 240ms; display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(0,0,0,.05); }\n.top-cap button { border: 0; border-radius: 999px; padding: 7px 16px; background: transparent; color: #57503f; font: 600 13px/1 system-ui; white-space: nowrap; cursor: pointer; transition: background-color var(--nav-ms), color var(--nav-ms); }\n.top-cap button.on { background: #0071e3; color: #fff; }\n</style>\n<nav class=\"top-cap\"><button class=\"on\">概览</button><button>趋势</button><button>明细</button></nav>",
+      "specimen_url": "specimens/top-capsule-bar.html",
+      "logical_size": [
+        780,
+        380
+      ],
+      "featured": false
+    },
+    {
+      "id": "compact-icon-rail",
+      "category": "navigation-focus",
+      "name_cn": "窄轨图标侧栏",
+      "name_en": "Compact Icon Rail",
+      "demo": {
+        "kind": "nav",
+        "variant": "iconrail"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "click",
+        "state"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "侧栏占空间",
+        "纯图标导航",
+        "极窄导航",
+        "icon rail",
+        "mini sidebar"
+      ],
+      "essence": "将侧栏收窄至 52px 圆形图标轨，把 95% 屏幕让给工作画布；选中态以正圆实心底色清晰确认。",
+      "when_to_use": [
+        "画布类工具（设计器、编辑器、IDE）、小屏桌面高密度工作台"
+      ],
+      "when_not_to_use": [
+        "首次使用的复杂业务系统（生僻抽象图标无文字会令新手困惑，需配悬停 Tooltip）"
+      ],
+      "tokens": {
+        "--nav-ms": "220ms",
+        "--accent": "#0071e3"
+      },
+      "knobs": [
+        {
+          "key": "--nav-ms",
+          "label": "激活时长",
+          "unit": "ms",
+          "min": 100,
+          "max": 440,
+          "step": 20,
+          "default": 220
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.16,
+          1.0,
+          0.3,
+          1.0
+        ],
+        "label": "Rail Snap · 窄轨确认"
+      },
+      "state_machine": [
+        {
+          "state": "idle",
+          "trigger": "未选中",
+          "visual": "38px 正圆热区 + 统一 1.8px 线宽图标",
+          "timing": "—"
+        },
+        {
+          "state": "active",
+          "trigger": "click",
+          "visual": "正圆填主色 + 白色图标，配 aria-label 与 title 提示",
+          "timing": "var(--nav-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止漏写 aria-label 或悬停提示（纯图标导航必须保证可辨识与无障碍可读）",
+        "禁止混用不同线宽、不同风格的图标（如空心细线配实心粗图标）",
+        "禁止点击热区小于 36×36px，导致窄轨难以命中",
+        "禁止在窄轨里塞超过 8 个图标导致纵向拥挤"
+      ],
+      "self_check": [
+        "每个图标按钮是否具备 >= 36×36px 的正圆热区与 aria-label？",
+        "所有图标的 stroke-width 是否保持一致？",
+        "当前激活项的圆形反白是否一眼醒目？"
+      ],
+      "code_snippet": "<style>\n.icon-rail { --nav-ms: 220ms; display: inline-flex; flex-direction: column; gap: 8px; padding: 8px; }\n.icon-rail button { width: 40px; height: 40px; border: 0; border-radius: 50%; background: transparent; color: #57503f; display: grid; place-items: center; cursor: pointer; transition: background-color var(--nav-ms), color var(--nav-ms); }\n.icon-rail button:hover { background: rgba(0,0,0,.06); color: #221d15; }\n.icon-rail button.on { background: #0071e3; color: #fff; }\n.icon-rail svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }\n</style>\n<nav class=\"icon-rail\"><button class=\"on\" aria-label=\"概览\" title=\"概览\"><svg viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/></svg></button></nav>",
+      "specimen_url": "specimens/compact-icon-rail.html",
+      "logical_size": [
+        780,
+        380
+      ],
+      "featured": false
+    },
+    {
+      "id": "brand-surface-nav",
+      "category": "navigation-focus",
+      "name_cn": "品牌色沉底导航",
+      "name_en": "Brand Surface Nav",
+      "demo": {
+        "kind": "nav",
+        "variant": "brand"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "click",
+        "state"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "品牌感弱",
+        "深蓝侧栏",
+        "反白导航",
+        "brand sidebar"
+      ],
+      "essence": "导航条整体沉入深品牌底色建立强品牌辨识，选中项反转为纯白胶囊浮起，与右侧浅底工作区形成清晰锚定。",
+      "when_to_use": [
+        "企业级 SaaS、需要强品牌识别度的垂直行业中台"
+      ],
+      "when_not_to_use": [
+        "需要长时间沉浸式调色或摄影修图的应用（强品牌色块会干扰色彩判断）"
+      ],
+      "tokens": {
+        "--brand-bg": "#0b2e52",
+        "--nav-ms": "240ms"
+      },
+      "knobs": [
+        {
+          "key": "--nav-ms",
+          "label": "反白耗时",
+          "unit": "ms",
+          "min": 100,
+          "max": 480,
+          "step": 20,
+          "default": 240
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.16,
+          1.0,
+          0.3,
+          1.0
+        ],
+        "label": "Inverse Pop · 反白浮起"
+      },
+      "state_machine": [
+        {
+          "state": "inactive",
+          "trigger": "沉底项",
+          "visual": "rgba(255,255,255,.72) 柔白文字，悬停透出 10% 白雾",
+          "timing": "180ms"
+        },
+        {
+          "state": "active",
+          "trigger": "click",
+          "visual": "整块反转为纯白胶囊 + 深品牌色文字，视觉重量最高",
+          "timing": "var(--nav-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止在深品牌底上使用低对比度灰字（未选中文字透明度不得低于 0.7）",
+        "禁止用亮荧光高饱和色做大面积侧栏背景（必须压低明度至沉稳深色如 #0b2e52）",
+        "禁止选中态仅用半透明白块，全白实心反白才能与品牌底拉开明确层级",
+        "禁止把全页都涂成品牌色——品牌底只收敛在导航轨内，工作区保持纯净"
+      ],
+      "self_check": [
+        "未选中项文字在深品牌底上的可读性是否清晰不费眼？",
+        "选中项纯白胶囊是否立即成为侧栏唯一焦点？",
+        "品牌色是否克制地收束在导航容器内而不污染内容区？"
+      ],
+      "code_snippet": "<style>\n.brand-nav { --brand-bg: #0b2e52; --nav-ms: 240ms; display: flex; flex-direction: column; gap: 4px; width: 176px; padding: 8px; border-radius: 14px; background: var(--brand-bg); }\n.brand-nav button { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border: 0; border-radius: 10px; background: transparent; color: rgba(255,255,255,.74); font: 600 13px/1 system-ui; cursor: pointer; transition: background-color var(--nav-ms), color var(--nav-ms); }\n.brand-nav button:hover { background: rgba(255,255,255,.12); color: #fff; }\n.brand-nav button.on { background: #fff; color: var(--brand-bg); }\n</style>\n<nav class=\"brand-nav\"><button class=\"on\">概览</button><button>趋势</button><button>明细</button></nav>",
+      "specimen_url": "specimens/brand-surface-nav.html",
+      "logical_size": [
+        780,
+        380
+      ],
+      "featured": false
+    },
+    {
+      "id": "outlined-group-tabs",
+      "category": "navigation-focus",
+      "name_cn": "分组描边标签栏",
+      "name_en": "Outlined Group Tabs",
+      "demo": {
+        "kind": "nav",
+        "variant": "grouptabs"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "click",
+        "state"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "标签页切换",
+        "轻量化Tab",
+        "描边胶囊",
+        "group tabs",
+        "pill tabs"
+      ],
+      "essence": "以克制细描边界定每个标签边界，选中时同时填满主色与收口边框，适合作为卡片内二级视图切换。",
+      "when_to_use": [
+        "仪表盘卡片内部子视图切换（如日/周/月、图表/表格）、嵌入式局部筛选"
+      ],
+      "when_not_to_use": [
+        "整站顶级主导航（体量过轻，不足以支撑全站骨架）"
+      ],
+      "tokens": {
+        "--nav-ms": "200ms",
+        "--accent": "#0071e3"
+      },
+      "knobs": [
+        {
+          "key": "--nav-ms",
+          "label": "过渡耗时",
+          "unit": "ms",
+          "min": 80,
+          "max": 420,
+          "step": 20,
+          "default": 200
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.16,
+          1.0,
+          0.3,
+          1.0
+        ],
+        "label": "Crisp Tab · 轻盈切页"
+      },
+      "state_machine": [
+        {
+          "state": "inactive",
+          "trigger": "未激活",
+          "visual": "1px 浅描边胶囊，透明底",
+          "timing": "—"
+        },
+        {
+          "state": "active",
+          "trigger": "click",
+          "visual": "边框与填充同步转为品牌色 + 白字",
+          "timing": "var(--nav-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止选中后把 border 删除（会导致高度/宽度少 2px 抖动，应把 border-color 设为同主色）",
+        "禁止在二级 Tab 里同时堆砌图标、红点与长文案",
+        "禁止忽略键盘左右切换与 aria-selected 属性",
+        "禁止同一屏出现两排以上风格完全相同的胶囊标签造成视觉打架"
+      ],
+      "self_check": [
+        "切换标签时边框是否保持 1px 不导致尺寸抖动？",
+        "是否简洁克制，适合放进卡片标题栏作为二级切换？",
+        "激活项与非激活项的边界是否清晰利落？"
+      ],
+      "code_snippet": "<style>\n.gtabs { --nav-ms: 200ms; --accent: #0071e3; display: inline-flex; gap: 6px; }\n.gtabs button { border: 1px solid rgba(0,0,0,.14); border-radius: 999px; padding: 6px 13px; background: transparent; color: #57503f; font: 600 12px/1 system-ui; cursor: pointer; transition: background-color var(--nav-ms), border-color var(--nav-ms), color var(--nav-ms); }\n.gtabs button.on { background: var(--accent); border-color: var(--accent); color: #fff; }\n</style>\n<div class=\"gtabs\" role=\"tablist\"><button class=\"on\" role=\"tab\" aria-selected=\"true\">概览</button><button role=\"tab\">趋势</button><button role=\"tab\">明细</button></div>",
+      "specimen_url": "specimens/outlined-group-tabs.html",
+      "logical_size": [
+        780,
+        380
+      ],
+      "featured": false
+    },
+    {
+      "id": "fan-focus-yield",
+      "category": "navigation-focus",
+      "name_cn": "焦点抬起邻卡让位",
+      "name_en": "Fan Focus Yield",
+      "demo": {
+        "kind": "foc",
+        "variant": "fan"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "hover",
+        "click"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "多卡展示平淡",
+        "焦点让位",
+        "卡片聚焦",
+        "focus yield",
+        "card fan"
+      ],
+      "essence": "一次只点亮一张主角卡：当前卡向上抬起并放大 1.06×，左右邻卡主动反向让位并退暗至 0.55，消除视觉竞争。",
+      "when_to_use": [
+        "产品套餐/机型对比、精选案例三连展台、互动式角色/主题选择"
+      ],
+      "when_not_to_use": [
+        "20+ 卡片的普通瀑布流列表（大面积频繁让位会让人眼花缭乱）"
+      ],
+      "tokens": {
+        "--lift-y": "-10px",
+        "--yield-x": "10px",
+        "--focus-ms": "420ms"
+      },
+      "knobs": [
+        {
+          "key": "--lift-y",
+          "label": "主角抬起",
+          "unit": "px",
+          "min": -22,
+          "max": -4,
+          "step": 2,
+          "default": -10
+        },
+        {
+          "key": "--yield-x",
+          "label": "邻卡让位",
+          "unit": "px",
+          "min": 4,
+          "max": 24,
+          "step": 2,
+          "default": 10
+        },
+        {
+          "key": "--focus-ms",
+          "label": "编排耗时",
+          "unit": "ms",
+          "min": 180,
+          "max": 760,
+          "step": 20,
+          "default": 420
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.16,
+          1.0,
+          0.3,
+          1.0
+        ],
+        "label": "Choreographed Yield · 礼让聚焦"
+      },
+      "state_machine": [
+        {
+          "state": "neutral",
+          "trigger": "无聚焦",
+          "visual": "所有卡片平权并排站立",
+          "timing": "var(--focus-ms)"
+        },
+        {
+          "state": "lit",
+          "trigger": "hover / focus 卡片 i",
+          "visual": "卡片 i 上浮 var(--lift-y) scale(1.06) + 主色边框与强影",
+          "timing": "var(--focus-ms)"
+        },
+        {
+          "state": "yield",
+          "trigger": "兄弟卡 j ≠ i",
+          "visual": "j < i 向左退 var(--yield-x)，j > i 向右退，scale(0.9) opacity(0.55)",
+          "timing": "var(--focus-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止只放大当前卡而不让邻卡退让（会互相遮挡重叠，显得拥挤廉价）",
+        "禁止通过修改 margin/gap 做让位（会引起布局重排抖动，必须只动 transform 与 opacity）",
+        "禁止让退让卡片完全透明消失（保持 0.5–0.6 透明度以维持上下文可见）",
+        "禁止忘记在指针离开整组容器时还原所有卡片到平权态"
+      ],
+      "self_check": [
+        "悬停中间卡时，左卡左退、右卡右退且双双微缩降暗？",
+        "悬停左卡时，中卡与右卡是否一致向右让开空间？",
+        "移出容器后所有卡片是否平滑复位无残留？"
+      ],
+      "code_snippet": "<style>\n.fan-row { --lift-y: -10px; --yield-x: 10px; --focus-ms: 420ms; display: flex; gap: 14px; justify-content: center; padding: 24px 0; }\n.fan-card { width: 108px; height: 144px; border-radius: 14px; background: #fff; border: 1px solid rgba(0,0,0,.1); box-shadow: 0 4px 12px rgba(0,0,0,.07); transition: transform var(--focus-ms) cubic-bezier(0.16,1,0.3,1), opacity var(--focus-ms), border-color 260ms, box-shadow var(--focus-ms); cursor: pointer; }\n.fan-card.lit { transform: translateY(var(--lift-y)) scale(1.06); border-color: #0071e3; box-shadow: 0 20px 36px -14px rgba(0,0,0,.22); z-index: 2; }\n.fan-card.yield-l { transform: translateX(calc(var(--yield-x) * -1)) scale(0.91); opacity: 0.55; }\n.fan-card.yield-r { transform: translateX(var(--yield-x)) scale(0.91); opacity: 0.55; }\n</style>\n<div class=\"fan-row\"><button class=\"fan-card\">卡 A</button><button class=\"fan-card\">卡 B</button><button class=\"fan-card\">卡 C</button></div>\n<script>\nconst row = document.querySelector('.fan-row'), cards = [...row.children];\nconst setLit = idx => cards.forEach((c, i) => {\n  c.classList.toggle('lit', i === idx);\n  c.classList.toggle('yield-l', idx >= 0 && i < idx);\n  c.classList.toggle('yield-r', idx >= 0 && i > idx);\n});\ncards.forEach((c, i) => { c.onpointerenter = () => setLit(i); c.onfocus = () => setLit(i); });\nrow.onpointerleave = () => setLit(-1);\n</script>",
+      "specimen_url": "specimens/fan-focus-yield.html",
+      "logical_size": [
+        780,
+        460
+      ],
+      "featured": false
+    },
+    {
+      "id": "coverflow-depth-stage",
+      "category": "navigation-focus",
+      "name_cn": "3D 透视焦点舞台",
+      "name_en": "CoverFlow Depth Focus",
+      "demo": {
+        "kind": "foc",
+        "variant": "cf"
+      },
+      "default_surface": "dark",
+      "drive": [
+        "click",
+        "hover"
+      ],
+      "tech": [
+        "css-3d",
+        "css-transition"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "轮播图太土",
+        "封面流",
+        "3D画廊",
+        "coverflow",
+        "carousel 3d"
+      ],
+      "essence": "以离中心距离 d 统一计算位移、缩放（100%/88%/76%）与 Y 轴侧转角（0°/16°/24°），用空间纵深回答谁是当前主角。",
+      "when_to_use": [
+        "沉浸式媒体专辑展台、精选作品/主题切换舞台、品牌发布页画廊"
+      ],
+      "when_not_to_use": [
+        "需要用户同时比对 5 张卡细密文字参数的决策表"
+      ],
+      "tokens": {
+        "--cf-step": "56",
+        "--cf-rot": "18",
+        "--cf-ms": "500ms"
+      },
+      "knobs": [
+        {
+          "key": "--cf-step",
+          "label": "卡片间距",
+          "unit": "px",
+          "min": 32,
+          "max": 92,
+          "step": 4,
+          "default": 56
+        },
+        {
+          "key": "--cf-rot",
+          "label": "侧转倾角",
+          "unit": "°",
+          "min": 6,
+          "max": 34,
+          "step": 2,
+          "default": 18
+        },
+        {
+          "key": "--cf-ms",
+          "label": "景深切换",
+          "unit": "ms",
+          "min": 220,
+          "max": 860,
+          "step": 20,
+          "default": 500
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.16,
+          1.0,
+          0.3,
+          1.0
+        ],
+        "label": "Spatial Glide · 纵深滑移"
+      },
+      "state_machine": [
+        {
+          "state": "center (d=0)",
+          "trigger": "当前选中索引",
+          "visual": "translateX(0) scale(1) rotateY(0°)，z-index 最高，全不透明",
+          "timing": "var(--cf-ms)"
+        },
+        {
+          "state": "flank (|d|>=1)",
+          "trigger": "左右侧翼卡",
+          "visual": "随 |d| 递增逐级退远、缩至 0.88/0.76 并面向中心侧转",
+          "timing": "var(--cf-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止用多套写死 CSS 类硬编码每张卡坐标（应根据 d = i - active 公式动态计算，便于扩展数量）",
+        "禁止忘记给每张卡设置 z-index = 10 - Math.abs(d)，否则远景卡会错误盖在主角前面",
+        "禁止缺少键盘左右方向键切卡支持",
+        "禁止外层忘记设 perspective 导致 rotateY 缺乏真实纵深透视"
+      ],
+      "self_check": [
+        "点击左右任意一张侧卡，是否能平滑滑入正中成为新主角？",
+        "主角卡的 z-index 是否始终高于左右侧翼卡，无穿插遮挡？",
+        "按键盘 ArrowLeft / ArrowRight 是否能顺滑切卡？"
+      ],
+      "code_snippet": "<style>\n.cf-stage { --cf-step: 56; --cf-rot: 18; --cf-ms: 500ms; position: relative; height: 180px; perspective: 620px; }\n.cf-card { position: absolute; left: 50%; top: 50%; width: 92px; height: 128px; margin: -64px 0 0 -46px; border-radius: 14px; background: #fff; border: 1px solid rgba(0,0,0,.12); cursor: pointer; transition: transform var(--cf-ms) cubic-bezier(0.16,1,0.3,1), opacity var(--cf-ms), border-color 260ms; }\n.cf-card.on { border-color: #0071e3; box-shadow: 0 18px 36px -12px rgba(0,0,0,.45); }\n</style>\n<div class=\"cf-stage\"></div>\n<script>\n// 核心公式：按距中心步数 d 驱动空间坐标\nfunction layoutCF(cards, active, step = 56, rot = 18) {\n  cards.forEach((c, i) => {\n    const d = i - active, ad = Math.abs(d);\n    const scale = ad === 0 ? 1 : ad === 1 ? 0.86 : 0.72;\n    const angle = d === 0 ? 0 : (d < 0 ? rot : -rot) * Math.min(ad, 1.5);\n    c.style.transform = `translate3d(${d * step}px, 0, ${-ad * 40}px) scale(${scale}) rotateY(${angle}deg)`;\n    c.style.opacity = String(Math.max(0.28, 1 - ad * 0.28));\n    c.style.zIndex = String(10 - ad);\n    c.classList.toggle('on', d === 0);\n  });\n}\n</script>",
+      "specimen_url": "specimens/coverflow-depth-stage.html",
+      "logical_size": [
+        780,
+        460
+      ],
+      "featured": true
+    },
+    {
+      "id": "scroll-synced-story",
+      "category": "scroll-rhythm",
+      "name_cn": "滚动叙事双栏同步",
+      "name_en": "Scroll-Synced Story",
+      "demo": {
+        "kind": "anim",
+        "variant": "story"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "scroll"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "长页面枯燥",
+        "滚动联动",
+        "产品介绍页",
+        "scroll storytelling",
+        "scrollytelling"
+      ],
+      "essence": "左栏随滚动逐段激活叙事章节，右栏固定舞台同步切换对应画面与指标，把阅读进度转化为演示节奏。",
+      "when_to_use": [
+        "产品核心特性分步讲解、交互式数据新闻、引导式长页教程"
+      ],
+      "when_not_to_use": [
+        "需要快速检索跳转的 API 参考文档"
+      ],
+      "tokens": {
+        "--sync-ms": "300ms",
+        "--accent": "#0071e3"
+      },
+      "knobs": [
+        {
+          "key": "--sync-ms",
+          "label": "同步过渡",
+          "unit": "ms",
+          "min": 120,
+          "max": 600,
+          "step": 20,
+          "default": 300
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          1.0,
+          0.36,
+          1.0
+        ],
+        "label": "Chapter Sync · 章节同步"
+      },
+      "state_machine": [
+        {
+          "state": "step-k",
+          "trigger": "滚动进度进入第 k 段",
+          "visual": "左侧第 k 张章节卡高亮反白，右侧固定画布切换至第 k 帧状态",
+          "timing": "var(--sync-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止劫持原生滚轮（scroll-jacking），必须保留流畅原生滚动仅读取 scrollTop / IntersectionObserver",
+        "禁止把右栏 sticky 舞台放进 overflow:hidden 的祖先里（会导致 position:sticky 彻底失效）",
+        "禁止忘记给每段留出足够触发高度，导致轻轻一滚就跳过中间章节",
+        "禁止无过渡硬切右侧展示，至少给 240ms 的内容淡换或数值过渡"
+      ],
+      "self_check": [
+        "缓慢上下滚动左侧段落时，右侧面板是否稳定同步且不闪烁？",
+        "是否完全保留原生滚轮手感，未劫持滚轮事件？",
+        "滚动到底部时是否能可靠停留在最后一个章节？"
+      ],
+      "code_snippet": "<style>\n.story { --sync-ms: 300ms; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 180px; }\n.story-left { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px; }\n.story-step { flex: none; min-height: 76px; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(0,0,0,.1); color: #57503f; transition: background-color var(--sync-ms), color var(--sync-ms); }\n.story-step.on { background: #0071e3; color: #fff; border-color: transparent; }\n.story-right { border-radius: 10px; background: #fff; border: 1px solid rgba(0,0,0,.1); display: grid; place-items: center; font: 700 18px/1 system-ui; }\n</style>\n<div class=\"story\">\n  <div class=\"story-left\"><div class=\"story-step on\">01 · 定义规范</div><div class=\"story-step\">02 · 实时调参</div><div class=\"story-step\">03 · 导出交付</div></div>\n  <div class=\"story-right\">阶段 1 / 3</div>\n</div>",
+      "specimen_url": "specimens/scroll-synced-story.html",
+      "logical_size": [
+        380,
+        220
+      ],
+      "featured": false
+    },
+    {
+      "id": "multi-layer-parallax",
+      "category": "scroll-rhythm",
+      "name_cn": "多层速率视差滚动",
+      "name_en": "Multi-Layer Parallax",
+      "demo": {
+        "kind": "anim",
+        "variant": "par"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "scroll"
+      ],
+      "tech": [
+        "raf"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "页面扁平没纵深",
+        "视差滚动",
+        "分层滚动",
+        "parallax",
+        "depth scroll"
+      ],
+      "essence": "不同景深层按 0.05× / 0.34× / 0.80× 速率响应同一 scrollTop，让远景慢行、前景快移，自然生出空间纵深。",
+      "when_to_use": [
+        "品牌官网首屏视觉叙事、插画场景展示、沉浸式专题页"
+      ],
+      "when_not_to_use": [
+        "高频操作的数据后台与正文阅读页（视差会分散注意力并诱发晕动症）"
+      ],
+      "tokens": {
+        "--par-mid": "0.34",
+        "--par-front": "0.8"
+      },
+      "knobs": [
+        {
+          "key": "--par-mid",
+          "label": "中景速率",
+          "unit": "×",
+          "min": 0.1,
+          "max": 0.7,
+          "step": 0.04,
+          "default": 0.34
+        },
+        {
+          "key": "--par-front",
+          "label": "前景速率",
+          "unit": "×",
+          "min": 0.4,
+          "max": 1.2,
+          "step": 0.05,
+          "default": 0.8
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.0,
+          0.0,
+          1.0,
+          1.0
+        ],
+        "label": "Scroll-Linked · 进度直驱"
+      },
+      "state_machine": [
+        {
+          "state": "scrolling",
+          "trigger": "scroll 事件 (passive:true)",
+          "visual": "各层以 translate3d(0, -st * factor, 0) 合成位移",
+          "timing": "0ms (每帧合成)"
+        }
+      ],
+      "do_not": [
+        "禁止用 background-position 或 top 做视差（每帧触发布局重绘掉帧），必须只动 translate3d",
+        "禁止不传 { passive: true } 监听 scroll 事件导致浏览器滚动主线程卡顿",
+        "禁止忽略 prefers-reduced-motion：减弱动效模式下必须将所有层速率归零",
+        "禁止前景速率过快导致元素移出可视区遮挡正文"
+      ],
+      "self_check": [
+        "滚动时远/中/近三层的相对位移速度是否拉开清晰层次？",
+        "滚动监听是否声明了 { passive: true } 且只修改 transform？",
+        "开启 Reduced Motion 时是否自动关闭视差位移？"
+      ],
+      "code_snippet": "<script>\n// passive 滚动 + translate3d 零重排多层视差\nscroller.addEventListener('scroll', () => {\n  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;\n  const st = scroller.scrollTop;\n  const rates = [0.05, 0.34, 0.8];\n  layers.forEach((el, i) => {\n    el.style.transform = `translate3d(0, ${(-st * rates[i]).toFixed(1)}px, 0)`;\n  });\n}, { passive: true });\n</script>",
+      "specimen_url": "specimens/multi-layer-parallax.html",
+      "logical_size": [
+        380,
+        220
+      ],
+      "featured": false
+    },
+    {
+      "id": "viewport-scroll-reveal",
+      "category": "scroll-rhythm",
+      "name_cn": "视口渐入上浮",
+      "name_en": "Viewport Scroll Reveal",
+      "demo": {
+        "kind": "anim",
+        "variant": "reveal"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "scroll"
+      ],
+      "tech": [
+        "io",
+        "css-transition"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "列表出现突兀",
+        "滚动渐入",
+        "卡片进场",
+        "scroll reveal",
+        "fade up"
+      ],
+      "essence": "借助 IntersectionObserver 在元素进入视口 20% 时触发 16px 上移淡入，既建立节奏又零滚动监听开销。",
+      "when_to_use": [
+        "营销页模块出场、长列表卡片渐进呈现、作品集画廊"
+      ],
+      "when_not_to_use": [
+        "首屏可见内容（首屏元素绝不能初始 opacity:0 等 JS 加载，否则破坏 LCP）"
+      ],
+      "tokens": {
+        "--reveal-y": "16px",
+        "--reveal-ms": "520ms",
+        "--ease-out": "cubic-bezier(0.22, 1, 0.36, 1)"
+      },
+      "knobs": [
+        {
+          "key": "--reveal-y",
+          "label": "起始位移",
+          "unit": "px",
+          "min": 6,
+          "max": 40,
+          "step": 2,
+          "default": 16
+        },
+        {
+          "key": "--reveal-ms",
+          "label": "入场耗时",
+          "unit": "ms",
+          "min": 200,
+          "max": 900,
+          "step": 20,
+          "default": 520
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          1.0,
+          0.36,
+          1.0
+        ],
+        "label": "Soft Reveal · 轻盈浮现"
+      },
+      "state_machine": [
+        {
+          "state": "hidden",
+          "trigger": "视口外",
+          "visual": "opacity: 0; transform: translateY(var(--reveal-y)) scale(0.985)",
+          "timing": "—"
+        },
+        {
+          "state": "visible",
+          "trigger": "IntersectionObserver >= 0.2",
+          "visual": "opacity: 1; transform: none",
+          "timing": "var(--reveal-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止用 window.onscroll + getBoundingClientRect() 轮询位置，必须用 IntersectionObserver",
+        "禁止位移超过 32px 或耗时超过 800ms（用户快速滚屏时会看到一片空白，感觉网站很慢）",
+        "禁止对首屏 Above-the-fold 内容隐藏等待渐入，影响首屏感知速度",
+        "禁止忘记在 prefers-reduced-motion 下直接设 opacity:1; transform:none"
+      ],
+      "self_check": [
+        "滚动触发是否使用了 IntersectionObserver 且无布局抖动？",
+        "上浮距离是否克制在 12–24px，用户快滚时不会扑空看白板？",
+        "组件卸载时是否正确调用 observer.disconnect()？"
+      ],
+      "code_snippet": "<style>\n.reveal-item { --reveal-y: 16px; --reveal-ms: 520ms; opacity: 0; transform: translateY(var(--reveal-y)) scale(0.985); transition: opacity var(--reveal-ms) cubic-bezier(0.22,1,0.36,1), transform var(--reveal-ms) cubic-bezier(0.22,1,0.36,1); }\n.reveal-item.in { opacity: 1; transform: none; }\n@media (prefers-reduced-motion: reduce) { .reveal-item { opacity: 1; transform: none; transition: none; } }\n</style>\n<script>\nconst io = new IntersectionObserver(entries => {\n  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });\n}, { threshold: 0.2 });\ndocument.querySelectorAll('.reveal-item').forEach(el => io.observe(el));\n</script>",
+      "specimen_url": "specimens/viewport-scroll-reveal.html",
+      "logical_size": [
+        380,
+        220
+      ],
+      "featured": false
+    },
+    {
+      "id": "easeout-count-up",
+      "category": "scroll-rhythm",
+      "name_cn": "缓停数字滚表",
+      "name_en": "Ease-Out Count Up",
+      "demo": {
+        "kind": "anim",
+        "variant": "count"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "state",
+        "scroll"
+      ],
+      "tech": [
+        "raf",
+        "io"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "统计数字呆板",
+        "KPI滚动",
+        "数字增长",
+        "count up",
+        "number ticker"
+      ],
+      "essence": "进入视口时用 requestAnimationFrame + easeOutCubic 在 1.2s 内由 0 滚至目标值，尾段柔和减速定格，强化成就感。",
+      "when_to_use": [
+        "里程碑数据墙、业绩大屏首次入场、Dashboard 核心 KPI 刷新"
+      ],
+      "when_not_to_use": [
+        "高频每秒跳动的股票/监控实时流（连续滚表会导致永远读不清真实数字）"
+      ],
+      "tokens": {
+        "--count-ms": "1200",
+        "--count-target": "7549"
+      },
+      "knobs": [
+        {
+          "key": "--count-ms",
+          "label": "滚动时长",
+          "unit": "ms",
+          "min": 400,
+          "max": 2400,
+          "step": 100,
+          "default": 1200
+        },
+        {
+          "key": "--count-target",
+          "label": "目标数值",
+          "unit": "",
+          "min": 1200,
+          "max": 98500,
+          "step": 500,
+          "default": 7549
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          1.0,
+          0.36,
+          1.0
+        ],
+        "label": "EaseOutCubic · 尾段缓停"
+      },
+      "state_machine": [
+        {
+          "state": "waiting",
+          "trigger": "进入视口前",
+          "visual": "显示初始值或目标态占位",
+          "timing": "—"
+        },
+        {
+          "state": "counting",
+          "trigger": "IO 命中 / 点击重播",
+          "visual": "rAF 按 1 - (1-t)³ 曲线插值并千分位格式化",
+          "timing": "var(--count-ms) ms"
+        },
+        {
+          "state": "settled",
+          "trigger": "t >= 1",
+          "visual": "精确写入最终目标值，释放 rAF 帧句柄",
+          "timing": "—"
+        }
+      ],
+      "do_not": [
+        "禁止用线性匀速增长（最后一位停得太突兀，必须用 easeOutCubic 做出收尾停顿感）",
+        "禁止忘记写 font-variant-numeric: tabular-nums（数字滚动时整行文字和后缀会剧烈左右颤抖）",
+        "禁止用 setInterval 步进（帧率不稳且切标签页会堆积），必须基于 performance.now() + rAF",
+        "禁止在 prefers-reduced-motion 下继续滚动，应直接显示最终数值"
+      ],
+      "self_check": [
+        "滚动过程中千分位逗号和后缀符号是否纹丝不动无左右抖动？",
+        "快接近终点时数字变化是否明显放慢并精确停在目标值？",
+        "重复触发重播时是否先 cancelAnimationFrame 防止两个循环打架？"
+      ],
+      "code_snippet": "<style>\n.kpi-num { font: 700 36px/1 system-ui; font-variant-numeric: tabular-nums; color: #0071e3; }\n</style>\n<span class=\"kpi-num\" data-target=\"7549\">0</span>\n<script>\nfunction countUp(el, target = 7549, ms = 1200) {\n  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = target.toLocaleString(); return; }\n  const t0 = performance.now();\n  const step = now => {\n    const t = Math.min(1, (now - t0) / ms);\n    const eased = 1 - Math.pow(1 - t, 3);\n    el.textContent = Math.round(eased * target).toLocaleString();\n    if (t < 1) requestAnimationFrame(step);\n  };\n  requestAnimationFrame(step);\n}\n</script>",
+      "specimen_url": "specimens/easeout-count-up.html",
+      "logical_size": [
+        380,
+        220
+      ],
+      "featured": false
+    },
+    {
+      "id": "staggered-list-cascade",
+      "category": "scroll-rhythm",
+      "name_cn": "错峰阶梯入场",
+      "name_en": "Staggered Cascade",
+      "demo": {
+        "kind": "anim",
+        "variant": "stag"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "time",
+        "state"
+      ],
+      "tech": [
+        "css-keyframes"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "列表一坨蹦出来",
+        "错峰动画",
+        "依次出场",
+        "stagger",
+        "cascade"
+      ],
+      "essence": "给同款子项注入序号变量 --i，用 calc(var(--i) * 70ms) 依次错开入场，让成组元素自带行云流水般的编排感。",
+      "when_to_use": [
+        "导航菜单展开、筛选后的卡片网格、统计柱状图、引导步骤列表"
+      ],
+      "when_not_to_use": [
+        "50 条以上的长表格（若每条延迟 70ms，最后一条要等 3.5 秒，应封顶总延迟 ≤ 360ms）"
+      ],
+      "tokens": {
+        "--stagger-ms": "70ms",
+        "--cycle-ms": "3400ms"
+      },
+      "knobs": [
+        {
+          "key": "--stagger-ms",
+          "label": "错峰步差",
+          "unit": "ms",
+          "min": 25,
+          "max": 180,
+          "step": 5,
+          "default": 70
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.16,
+          1.0,
+          0.3,
+          1.0
+        ],
+        "label": "70ms Cascade · 阶梯错峰"
+      },
+      "state_machine": [
+        {
+          "state": "queued",
+          "trigger": "等待 i × --stagger-ms",
+          "visual": "opacity: 0; translateY(12px)",
+          "timing": "calc(var(--i) * var(--stagger-ms))"
+        },
+        {
+          "state": "entered",
+          "trigger": "轮到该项入场",
+          "visual": "平滑升至原位 opacity: 1",
+          "timing": "420ms ease-out"
+        }
+      ],
+      "do_not": [
+        "禁止单步延迟大于 120ms（超过 120ms 会感觉逐个卡顿，40–80ms 是黄金甜点区）",
+        "禁止对超过 8 个元素无限累加延迟（第 8 个之后应封顶或合并同批入场）",
+        "禁止用 JS setTimeout 给 20 个节点手动加 class（用 CSS --i 变量更简洁且帧同步）",
+        "禁止在高频筛选切换时每次都播 1 秒长入场阻挡用户看数据"
+      ],
+      "self_check": [
+        "步差是否在 40–90ms 的连贯视觉甜点区？",
+        "是否只通过 CSS 变量 --i 驱动 delay 而非硬编码 nth-child？",
+        "所有子项是否只动 transform 与 opacity？"
+      ],
+      "code_snippet": "<style>\n.stag-list { --stagger-ms: 70ms; display: flex; gap: 10px; }\n.stag-list i { width: 34px; height: 72px; border-radius: 10px; background: #fff; border: 1px solid rgba(0,0,0,.1); animation: stag-in 520ms cubic-bezier(0.16,1,0.3,1) both; animation-delay: calc(var(--i) * var(--stagger-ms)); }\n@keyframes stag-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }\n</style>\n<div class=\"stag-list\"><i style=\"--i:0\"></i><i style=\"--i:1\"></i><i style=\"--i:2\"></i><i style=\"--i:3\"></i></div>",
+      "specimen_url": "specimens/staggered-list-cascade.html",
+      "logical_size": [
+        380,
+        220
+      ],
+      "featured": false
+    },
+    {
+      "id": "cipher-scramble-decode",
+      "category": "scroll-rhythm",
+      "name_cn": "乱码逐位解码",
+      "name_en": "Cipher Scramble Decode",
+      "demo": {
+        "kind": "anim",
+        "variant": "scr"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "time",
+        "hover"
+      ],
+      "tech": [
+        "raf"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "科技感标题",
+        "字符解码",
+        "乱码文字",
+        "scramble text",
+        "cipher decode"
+      ],
+      "essence": "每 70ms 刷新一次未定格槽位的随机字符，并从左到右逐位锁定真实文本，以极低代码量制造硬核终端质感。",
+      "when_to_use": [
+        "极客/AI 产品首屏标语、悬停导航微彩蛋、密钥/版本号揭示"
+      ],
+      "when_not_to_use": [
+        "大段正文阅读或需要高可读性的错误提示语"
+      ],
+      "tokens": {
+        "--scr-step-ms": "70"
+      },
+      "knobs": [
+        {
+          "key": "--scr-step-ms",
+          "label": "解码帧步",
+          "unit": "ms",
+          "min": 30,
+          "max": 150,
+          "step": 10,
+          "default": 70
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.0,
+          0.0,
+          1.0,
+          1.0
+        ],
+        "label": "Discrete Step · 离散逐位定格"
+      },
+      "state_machine": [
+        {
+          "state": "scrambling",
+          "trigger": "入场 / 悬停 / 重播",
+          "visual": "已锁位显示真实字符，后续位高速跳动 A-Z0-9#$%",
+          "timing": "每帧 var(--scr-step-ms) ms"
+        },
+        {
+          "state": "locked",
+          "trigger": "指针扫完末尾",
+          "visual": "100% 锁定清晰目标词，停歇等待下次触发",
+          "timing": "—"
+        }
+      ],
+      "do_not": [
+        "禁止用非等宽比例字体跑乱码（字符宽窄不一会导致整句左右狂抖，必须用等宽字体或固定字符集）",
+        "禁止对超过 24 个字符的长句使用解码（耗时太久且眼花缭乱）",
+        "禁止把目标文本直接丢失在 DOM 里，应保留 aria-label 让读屏软件直接读完整语义",
+        "禁止在元素移出视口后继续跑定时循环浪费电量"
+      ],
+      "self_check": [
+        "解码跳动期间，标题容器总宽度是否基本稳定不左右狂晃？",
+        "是否设置了 aria-label 保存原始完整文本？",
+        "离开视口或卸载时定时器是否被干净清除？"
+      ],
+      "code_snippet": "<span class=\"cipher\" aria-label=\"MOTION DESIGN\" style=\"font:700 18px/1 ui-monospace,monospace;letter-spacing:.08em\">MOTION DESIGN</span>\n<script>\nfunction scramble(el, text = 'MOTION DESIGN', stepMs = 70) {\n  const pool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&*';\n  let k = 0;\n  const tick = () => {\n    el.textContent = [...text].map((ch, i) => ch === ' ' ? ' ' : (i < k ? ch : pool[Math.floor(Math.random() * pool.length)])).join('');\n    if (++k <= text.length) setTimeout(tick, stepMs);\n  };\n  tick();\n}\n</script>",
+      "specimen_url": "specimens/cipher-scramble-decode.html",
+      "logical_size": [
+        380,
+        220
+      ],
+      "featured": false
+    },
+    {
+      "id": "stream-typewriter-cursor",
+      "category": "scroll-rhythm",
+      "name_cn": "流式打字机光标",
+      "name_en": "Stream Typewriter Cursor",
+      "demo": {
+        "kind": "anim",
+        "variant": "type"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "time"
+      ],
+      "tech": [
+        "css-keyframes"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "AI回复动效",
+        "打字机",
+        "闪烁光标",
+        "typewriter",
+        "streaming text"
+      ],
+      "essence": "以 90ms/字稳定节奏逐字吐出、1.3s 停顿供人读完、45ms/字轻快退格，搭配 1s steps(1) 锐利闪烁光标模拟实时生成。",
+      "when_to_use": [
+        "AI 对话流式输出、Hero 标语轮播关键词、终端命令演示"
+      ],
+      "when_not_to_use": [
+        "超过 2 行的长段说明书（强迫用户等字一个个蹦出来极其折磨人）"
+      ],
+      "tokens": {
+        "--type-ms": "90",
+        "--blink-ms": "1000ms"
+      },
+      "knobs": [
+        {
+          "key": "--type-ms",
+          "label": "打字间隔",
+          "unit": "ms",
+          "min": 35,
+          "max": 180,
+          "step": 5,
+          "default": 90
+        },
+        {
+          "key": "--blink-ms",
+          "label": "光标周期",
+          "unit": "ms",
+          "min": 400,
+          "max": 1600,
+          "step": 100,
+          "default": 1000
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.0,
+          0.0,
+          1.0,
+          1.0
+        ],
+        "label": "steps(1) · 锐利光标"
+      },
+      "state_machine": [
+        {
+          "state": "typing",
+          "trigger": "逐字输出",
+          "visual": "每 var(--type-ms) ms 追加 1 字",
+          "timing": "90ms/char"
+        },
+        {
+          "state": "holding",
+          "trigger": "句末停顿",
+          "visual": "停留 1.3s 保证可读性，光标继续闪烁",
+          "timing": "1300ms"
+        },
+        {
+          "state": "erasing",
+          "trigger": "切下句前",
+          "visual": "2 倍速轻快退格清空，进入下一关键词",
+          "timing": "45ms/char"
+        }
+      ],
+      "do_not": [
+        "禁止光标用 ease 渐变闪烁（应使用 steps(1) 干脆亮灭，才像真实输入光标）",
+        "禁止打完一句立即 0ms 删掉（必须给 1.2s–1.8s 的阅读停顿）",
+        "禁止把打字机放进会引发换行跳动的未限高容器（应锁死 min-height 或单行）",
+        "禁止在 reduced-motion 下继续循环打字，应直接静态展示首句完整文案"
+      ],
+      "self_check": [
+        "光标闪烁是否为锐利 steps(1) 而非模糊呼吸？",
+        "文字清空为 0 字时，容器高度是否不会塌陷跳动？",
+        "退格速度是否明显快于打字速度，节奏不拖沓？"
+      ],
+      "code_snippet": "<style>\n.tw { --blink-ms: 1000ms; font: 700 20px/1.3 system-ui; min-height: 1.3em; display: inline-flex; align-items: center; }\n.tw-cursor { display: inline-block; width: 2px; height: 1em; margin-left: 3px; background: #0071e3; animation: tw-blink var(--blink-ms) steps(1) infinite; }\n@keyframes tw-blink { 50% { opacity: 0; } }\n</style>\n<div class=\"tw\"><span id=\"tw-tx\">光影即深度</span><i class=\"tw-cursor\"></i></div>",
+      "specimen_url": "specimens/stream-typewriter-cursor.html",
+      "logical_size": [
+        380,
+        220
+      ],
+      "featured": false
+    },
+    {
+      "id": "infinite-pause-marquee",
+      "category": "scroll-rhythm",
+      "name_cn": "悬停可停跑马灯",
+      "name_en": "Pauseable Infinite Marquee",
+      "demo": {
+        "kind": "anim",
+        "variant": "marquee"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "time",
+        "hover"
+      ],
+      "tech": [
+        "css-keyframes"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "Logo墙滚动",
+        "无缝循环",
+        "跑马灯卡顿",
+        "marquee",
+        "ticker"
+      ],
+      "essence": "复制双倍轨道并以 linear 平移 -50% 实现零缝隙无限循环，两端用 mask-image 羽化消隐，悬停或聚焦立即暂停。",
+      "when_to_use": [
+        "合作伙伴 Logo 墙、用户好评横向流、能力标签展示带"
+      ],
+      "when_not_to_use": [
+        "需要用户认真阅读的紧急系统告警或长段条款"
+      ],
+      "tokens": {
+        "--marquee-s": "9s"
+      },
+      "knobs": [
+        {
+          "key": "--marquee-s",
+          "label": "循环周期",
+          "unit": "s",
+          "min": 4,
+          "max": 22,
+          "step": 1,
+          "default": 9
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.0,
+          0.0,
+          1.0,
+          1.0
+        ],
+        "label": "Pure Linear · 匀速无缝"
+      },
+      "state_machine": [
+        {
+          "state": "running",
+          "trigger": "进入视口",
+          "visual": "translate3d(0) -> translate3d(-50%) 匀速衔接",
+          "timing": "var(--marquee-s) linear infinite"
+        },
+        {
+          "state": "paused",
+          "trigger": ":hover / :focus-within / 离视口",
+          "visual": "animation-play-state: paused，方便阅读与点击",
+          "timing": "即时冻结"
+        }
+      ],
+      "do_not": [
+        "禁止用 ease 或 ease-in-out 跑马灯（每圈交接处会突然减速停顿再加速，必须用 linear）",
+        "禁止省略悬停暂停（:hover 与 :focus-within 必须暂停，否则用户根本点不中或读不完）",
+        "禁止两端生硬硬切截断，必须加左右 12% mask-image 渐隐边缘",
+        "禁止第二份副本用 JS 拼错间距导致 -50% 接缝处出现肉眼可见的回跳"
+      ],
+      "self_check": [
+        "走完一轮回到起点时，接缝处是否丝滑到完全看不出重置？",
+        "鼠标放上去或键盘聚焦时，跑马灯是否立刻原地停住？",
+        "左右边缘是否有柔和的透明羽化渐隐？"
+      ],
+      "code_snippet": "<style>\n.mq-wrap { --marquee-s: 9s; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }\n.mq-track { display: flex; gap: 12px; width: max-content; animation: mq-move var(--marquee-s) linear infinite; }\n.mq-wrap:hover .mq-track, .mq-wrap:focus-within .mq-track { animation-play-state: paused; }\n.mq-track span { padding: 6px 14px; border-radius: 999px; border: 1px solid rgba(0,0,0,.12); background: #fff; font-size: 12.5px; white-space: nowrap; }\n@keyframes mq-move { to { transform: translate3d(-50%, 0, 0); } }\n</style>\n<div class=\"mq-wrap\" tabindex=\"0\"><div class=\"mq-track\"><span>Token 契约</span><span>状态机</span><span>微回执</span><span>零重排</span><span>Token 契约</span><span>状态机</span><span>微回执</span><span>零重排</span></div></div>",
+      "specimen_url": "specimens/infinite-pause-marquee.html",
+      "logical_size": [
+        380,
+        220
+      ],
+      "featured": false
+    },
+    {
+      "id": "diagonal-skeleton-shimmer",
+      "category": "scroll-rhythm",
+      "name_cn": "斜角骨架流光",
+      "name_en": "Diagonal Skeleton Shimmer",
+      "demo": {
+        "kind": "anim",
+        "variant": "shim"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "time"
+      ],
+      "tech": [
+        "css-keyframes"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "加载白屏",
+        "骨架屏",
+        "loading占位",
+        "skeleton",
+        "shimmer"
+      ],
+      "essence": "按真实内容排版比例（100%/80%/60%）预留占位条，用 100° 斜角高光伪元素纯 transform 扫过，消除白屏焦虑。",
+      "when_to_use": [
+        "首屏列表/卡片数据异步加载中（预计耗时 300ms–3000ms）"
+      ],
+      "when_not_to_use": [
+        "耗时 < 150ms 的本地极速操作（闪一下骨架屏反而显得卡顿）"
+      ],
+      "tokens": {
+        "--shim-s": "1.9s"
+      },
+      "knobs": [
+        {
+          "key": "--shim-s",
+          "label": "扫光周期",
+          "unit": "s",
+          "min": 0.9,
+          "max": 3.6,
+          "step": 0.1,
+          "default": 1.9
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.0,
+          0.0,
+          1.0,
+          1.0
+        ],
+        "label": "100° Sweep · 斜向扫光"
+      },
+      "state_machine": [
+        {
+          "state": "loading",
+          "trigger": "请求发出",
+          "visual": "伪元素 ::after 从 translateX(-100%) 匀速扫至 100%",
+          "timing": "var(--shim-s) linear infinite"
+        },
+        {
+          "state": "loaded",
+          "trigger": "数据就绪",
+          "visual": "平滑淡出骨架并替换为同高度真实内容（防 CLS 跳动）",
+          "timing": "180ms"
+        }
+      ],
+      "do_not": [
+        "禁止通过动画修改 background-position 实现骨架流光（每帧触发重绘耗电），必须用 ::after + transform: translateX",
+        "禁止把所有骨架行做成一模一样的 100% 宽度（应按 100%/80%/60% 模拟真实文本参差感）",
+        "禁止扫光速度过快（< 1s 会造成紧张焦虑感，1.6s–2.2s 最从容）",
+        "禁止骨架高度与加载后的真实卡片高度相差过大导致页面剧烈跳动（CLS）"
+      ],
+      "self_check": [
+        "流光是否只动 ::after 的 transform 而未动 background-position？",
+        "多行骨架是否具备自然的宽度阶梯与真实排版对齐？",
+        "prefers-reduced-motion 下是否停止扫光改为静态柔和占位？"
+      ],
+      "code_snippet": "<style>\n.sk-box { --shim-s: 1.9s; width: 220px; display: grid; gap: 10px; }\n.sk-line { height: 13px; border-radius: 7px; background: rgba(0,0,0,.07); position: relative; overflow: hidden; }\n.sk-line:nth-child(2) { width: 80%; } .sk-line:nth-child(3) { width: 58%; }\n.sk-line::after { content: \"\"; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(100deg, transparent 28%, rgba(255,255,255,.55) 50%, transparent 72%); animation: sk-sweep var(--shim-s) linear infinite; }\n@keyframes sk-sweep { to { transform: translateX(100%); } }\n</style>\n<div class=\"sk-box\"><div class=\"sk-line\"></div><div class=\"sk-line\"></div><div class=\"sk-line\"></div></div>",
+      "specimen_url": "specimens/diagonal-skeleton-shimmer.html",
+      "logical_size": [
+        380,
+        220
+      ],
+      "featured": false
+    },
+    {
+      "id": "weight-easing-comparison",
+      "category": "scroll-rhythm",
+      "name_cn": "匀速与减速缓动对照",
+      "name_en": "Easing Weight Comparison",
+      "demo": {
+        "kind": "anim",
+        "variant": "ease"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "time"
+      ],
+      "tech": [
+        "css-keyframes"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "动效发木",
+        "机器感太重",
+        "缓动曲线",
+        "easing curve",
+        "linear vs ease-out"
+      ],
+      "essence": "同样 2.2s 行程，linear 匀速启停显得冰冷发木；cubic-bezier(0.16, 1, 0.3, 1) 先快后慢，瞬间赋予界面物理重量感。",
+      "when_to_use": [
+        "作为整个设计系统的默认过渡曲线基准（抽屉、弹窗、卡片展开、焦点移动）"
+      ],
+      "when_not_to_use": [
+        "连续匀速循环类动效（如跑马灯、加载旋转环——那些才应该用 linear）"
+      ],
+      "tokens": {
+        "--ease-s": "2.2s",
+        "--ease-pro": "cubic-bezier(0.16, 1, 0.3, 1)"
+      },
+      "knobs": [
+        {
+          "key": "--ease-s",
+          "label": "演示周期",
+          "unit": "s",
+          "min": 1.0,
+          "max": 4.0,
+          "step": 0.2,
+          "default": 2.2
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.16,
+          1.0,
+          0.3,
+          1.0
+        ],
+        "label": "Expo Out · 先快后慢"
+      },
+      "state_machine": [
+        {
+          "state": "linear-ref",
+          "trigger": "对照组",
+          "visual": "恒速启停，撞墙式急刹",
+          "timing": "var(--ease-s) linear"
+        },
+        {
+          "state": "expo-out",
+          "trigger": "推荐轨",
+          "visual": "前 30% 时间内冲过 75% 路程，后 70% 丝滑减速落定",
+          "timing": "var(--ease-s) cubic-bezier(0.16,1,0.3,1)"
+        }
+      ],
+      "do_not": [
+        "禁止在 UI 进场/弹窗/抽屉上使用 linear（会带来强烈的廉价机械感）",
+        "禁止直接写 CSS 默认 ease 而不做项目级 Token 统一（各组件节奏零散不协调）",
+        "禁止给退出/关闭动画用比进场更慢的曲线（一般进场 280–400ms ease-out，退出更短促 180–240ms）",
+        "禁止超过 600ms 的常规交互过渡（让用户觉得应用变卡）"
+      ],
+      "self_check": [
+        "两颗圆点同时出发同时到达，下轨是否明显更有轻盈响应与稳重刹车感？",
+        "项目中是否已将 cubic-bezier(0.16, 1, 0.3, 1) 抽为全局 CSS 变量复用？",
+        "只有跑马灯/旋转环使用 linear，其余交互全部使用减速曲线？"
+      ],
+      "code_snippet": "<style>\n:root { --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1); }\n.ease-demo { --ease-s: 2.2s; width: 180px; display: grid; gap: 16px; }\n.ease-row { position: relative; height: 14px; }\n.ease-row::before { content: \"\"; position: absolute; inset: 6px 0 auto; height: 2px; background: rgba(0,0,0,.1); }\n.ease-dot { position: absolute; width: 14px; height: 14px; border-radius: 50%; animation: go-x var(--ease-s) infinite alternate; }\n.ease-row.lin .ease-dot { background: #8e8e93; animation-timing-function: linear; }\n.ease-row.pro .ease-dot { background: #0071e3; animation-timing-function: var(--ease-out-expo); }\n@keyframes go-x { to { transform: translateX(148px); } }\n</style>\n<div class=\"ease-demo\"><div class=\"ease-row lin\"><i class=\"ease-dot\"></i></div><div class=\"ease-row pro\"><i class=\"ease-dot\"></i></div></div>",
+      "specimen_url": "specimens/weight-easing-comparison.html",
+      "logical_size": [
+        380,
+        220
+      ],
+      "featured": false
+    },
+    {
+      "id": "dark-protagonist-grid",
+      "category": "spatial-hierarchy",
+      "name_cn": "深色三列跨栏主角",
+      "name_en": "Dark Protagonist Grid",
+      "demo": {
+        "kind": "lay",
+        "variant": "dark3"
+      },
+      "default_surface": "dark",
+      "drive": [
+        "click",
+        "state"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "layout",
+      "symptoms": [
+        "Dashboard太平均",
+        "深色大屏布局",
+        "主次不分",
+        "bento grid",
+        "dark dashboard"
+      ],
+      "essence": "三列两行深色网格中，始终让当前唯一主角横跨两列（grid-column: span 2），其余配角自动让出主视觉面积。",
+      "when_to_use": [
+        "夜间监控控制台、开发运维看板、AI 算力/指标总览面板"
+      ],
+      "when_not_to_use": [
+        "所有卡片需要等宽打印或逐行对比的数据报表"
+      ],
+      "tokens": {
+        "--grid-gap": "8px",
+        "--grid-ms": "420ms"
+      },
+      "knobs": [
+        {
+          "key": "--grid-gap",
+          "label": "栅格间距",
+          "unit": "px",
+          "min": 4,
+          "max": 18,
+          "step": 2,
+          "default": 8
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.16,
+          1.0,
+          0.3,
+          1.0
+        ],
+        "label": "Hero Span · 主角跨栏"
+      },
+      "state_machine": [
+        {
+          "state": "hero-k",
+          "trigger": "切换当前主角卡",
+          "visual": "卡 k 获得 .hero (grid-column: span 2)，信息密度与字号跃升",
+          "timing": "var(--grid-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止把 4 张或 6 张 KPI 卡做成完全等大等权（没有主角就没有阅读起点）",
+        "禁止深色卡片用纯黑 #000 配纯白粗边框（应用 #111315 底 + 6%–8% 柔白玻璃面 + 极弱边）",
+        "禁止在一个看板里给 3 张以上卡片同时上高饱和彩底",
+        "禁止切换主角时丢失清晰标识，必须明确告知当前谁是 Hero"
+      ],
+      "self_check": [
+        "一眼扫过看板时，是否立刻知道哪一块是当前唯一主角？",
+        "点击切换主角时，栅格是否干净重排无溢出断行？",
+        "深色面之间的对比层次是否克制柔和？"
+      ],
+      "code_snippet": "<style>\n.d3-grid { --grid-gap: 8px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 1fr; gap: var(--grid-gap); padding: 12px; border-radius: 14px; background: #141618; color: #f2f0e9; min-height: 160px; }\n.d3-card { border-radius: 10px; background: rgba(255,255,255,.07); padding: 12px; display: flex; flex-direction: column; justify-content: center; }\n.d3-card.hero { grid-column: span 2; background: rgba(255,255,255,.11); }\n</style>\n<div class=\"d3-grid\"><div class=\"d3-card hero\"><small>主角指标</small><b>3,600</b></div><div class=\"d3-card\"><small>配角 A</small><b>82%</b></div><div class=\"d3-card\"><small>配角 B</small><b>+14%</b></div></div>",
+      "specimen_url": "specimens/dark-protagonist-grid.html",
+      "logical_size": [
+        740,
+        410
+      ],
+      "featured": false
+    },
+    {
+      "id": "frosted-overlay-dashboard",
+      "category": "spatial-hierarchy",
+      "name_cn": "硬边底雾面玻璃面板",
+      "name_en": "Frosted Glass Dashboard",
+      "demo": {
+        "kind": "lay",
+        "variant": "glass"
+      },
+      "default_surface": "vivid",
+      "drive": [
+        "click",
+        "state"
+      ],
+      "tech": [
+        "backdrop-filter",
+        "css-transition"
+      ],
+      "scope": "layout",
+      "symptoms": [
+        "玻璃看板",
+        "毛玻璃排版",
+        "层级通透",
+        "glassmorphism dashboard"
+      ],
+      "essence": "在分块硬边色底之上悬浮 1.5fr : 1fr 非对称雾面玻璃主卡，左侧通栏主角与右侧双辅卡形成透光景深。",
+      "when_to_use": [
+        "创意工具总览、智能家居/车载中控大屏、个人空间概览"
+      ],
+      "when_not_to_use": [
+        "财务对账或高频密集表格（背景透色会干扰数字核对）"
+      ],
+      "tokens": {
+        "--glass-blur": "8px",
+        "--grid-gap": "8px"
+      },
+      "knobs": [
+        {
+          "key": "--glass-blur",
+          "label": "面板模糊",
+          "unit": "px",
+          "min": 2,
+          "max": 20,
+          "step": 1,
+          "default": 8
+        },
+        {
+          "key": "--grid-gap",
+          "label": "卡片间距",
+          "unit": "px",
+          "min": 4,
+          "max": 16,
+          "step": 2,
+          "default": 8
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.16,
+          1.0,
+          0.3,
+          1.0
+        ],
+        "label": "Optic Layer · 透光层次"
+      },
+      "state_machine": [
+        {
+          "state": "hero-span-row",
+          "trigger": "切换主角",
+          "visual": "主角卡占据左侧整列 (grid-row: span 2)，辅卡叠放右侧",
+          "timing": "360ms"
+        }
+      ],
+      "do_not": [
+        "禁止给玻璃面板配模糊成一团糊的柔和单色背景（硬边几何色块才能让 blur 产生高级折射）",
+        "禁止省略 1px rgba(255,255,255,.35) 冰裂高光边框，否则玻璃边缘会融进背景里",
+        "禁止把深色小字直接写在半透明玻璃上导致对比度不足（应使用高对比纯白字 + 微暗玻璃底）",
+        "禁止一层玻璃上面再叠三层玻璃造成视觉发灰脏乱"
+      ],
+      "self_check": [
+        "玻璃卡片边缘的高光边框是否清晰界定每块面板？",
+        "文字对比度在所有背景色块区域是否都达到清晰可读？",
+        "非对称 1.5fr : 1fr 比例是否清晰确立了主辅秩序？"
+      ],
+      "code_snippet": "<style>\n.g-dash { --glass-blur: 8px; --grid-gap: 8px; display: grid; grid-template-columns: 1.5fr 1fr; grid-template-rows: 1fr 1fr; gap: var(--grid-gap); padding: 14px; border-radius: 16px; background: linear-gradient(135deg,#1d3a5f 0 33%,#5f2d3a 33% 66%,#2d5f4a 66%); min-height: 170px; }\n.g-panel { border-radius: 11px; padding: 12px; color: #fff; background: rgba(255,255,255,.16); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid rgba(255,255,255,.38); }\n.g-panel.hero { grid-row: span 2; }\n</style>\n<div class=\"g-dash\"><div class=\"g-panel hero\">主角通栏卡</div><div class=\"g-panel\">辅卡 1</div><div class=\"g-panel\">辅卡 2</div></div>",
+      "specimen_url": "specimens/frosted-overlay-dashboard.html",
+      "logical_size": [
+        740,
+        410
+      ],
+      "featured": false
+    },
+    {
+      "id": "editorial-image-hero",
+      "category": "spatial-hierarchy",
+      "name_cn": "大图主视觉分栏",
+      "name_en": "Editorial Image-Led Layout",
+      "demo": {
+        "kind": "lay",
+        "variant": "image"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "click",
+        "state"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "layout",
+      "symptoms": [
+        "图文页面呆板",
+        "大图主视觉",
+        "杂志排版",
+        "editorial layout",
+        "image hero"
+      ],
+      "essence": "以 1.7fr : 1fr 将情绪大图推上左侧通栏主角位，数据与次级指标自觉退至右侧窄栏，营造杂志编辑级质感。",
+      "when_to_use": [
+        "文旅/生活方式 App、内容社区首页、视觉驱动型作品展示台"
+      ],
+      "when_not_to_use": [
+        "纯数值驱动的交易终端（大图会浪费宝贵信息带宽）"
+      ],
+      "tokens": {
+        "--hero-ratio": "1.7fr",
+        "--grid-gap": "8px"
+      },
+      "knobs": [
+        {
+          "key": "--grid-gap",
+          "label": "栏间留白",
+          "unit": "px",
+          "min": 4,
+          "max": 18,
+          "step": 2,
+          "default": 8
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.16,
+          1.0,
+          0.3,
+          1.0
+        ],
+        "label": "Editorial Ratio · 杂志比例"
+      },
+      "state_machine": [
+        {
+          "state": "image-protagonist",
+          "trigger": "默认 / 轮换主角",
+          "visual": "左侧通栏大图 + 底部渐暗文字压层，右侧两张轻量数据卡",
+          "timing": "360ms"
+        }
+      ],
+      "do_not": [
+        "禁止把白色文字直接叠在亮色图片上（必须在图片底部加从透明到 rgba(0,0,0,.55) 的暗部渐变遮罩）",
+        "禁止大图和右栏 1:1 均分（1.7:1 甚至 2:1 的黄金偏心比才有杂志编辑张力）",
+        "禁止给侧栏塞满花哨色彩抢夺主视觉图片的焦点",
+        "禁止忘记给图片容器设 overflow: hidden 与 object-fit: cover 防止拉伸变形"
+      ],
+      "self_check": [
+        "主视觉图面积是否明显大于右侧数据辅栏（>= 1.6×）？",
+        "叠加在图上的标题文字是否具有底部渐暗遮罩保证高可读性？",
+        "图片缩放裁切是否自然无变形？"
+      ],
+      "code_snippet": "<style>\n.ed-grid { --grid-gap: 10px; display: grid; grid-template-columns: 1.7fr 1fr; grid-template-rows: 1fr 1fr; gap: var(--grid-gap); min-height: 170px; }\n.ed-hero { grid-row: span 2; position: relative; border-radius: 14px; overflow: hidden; background: linear-gradient(160deg,#3d6150,#1f3128); color: #fff; display: flex; align-items: flex-end; padding: 14px; }\n.ed-hero::before { content: \"\"; position: absolute; inset: 40% 0 0; background: linear-gradient(transparent, rgba(0,0,0,.55)); }\n.ed-hero > div { position: relative; z-index: 1; }\n.ed-side { border-radius: 12px; background: #f1ece1; padding: 12px; }\n</style>\n<div class=\"ed-grid\"><div class=\"ed-hero\"><div><small>今日主视觉</small><br><b>山谷晨雾</b></div></div><div class=\"ed-side\">湿度 68%</div><div class=\"ed-side\">能见度 12km</div></div>",
+      "specimen_url": "specimens/editorial-image-hero.html",
+      "logical_size": [
+        740,
+        410
+      ],
+      "featured": true
+    },
+    {
+      "id": "light-asymmetric-columns",
+      "category": "spatial-hierarchy",
+      "name_cn": "浅色双栏主角排版",
+      "name_en": "Light Asymmetric Columns",
+      "demo": {
+        "kind": "lay",
+        "variant": "light"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "click",
+        "state"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "layout",
+      "symptoms": [
+        "浅色界面没重点",
+        "留白看板",
+        "主次分栏",
+        "light dashboard"
+      ],
+      "essence": "在克制浅纸底上仅以 8% 极淡品牌色与双倍栏宽标出主角，不靠重阴影也能让信息重心一目了然。",
+      "when_to_use": [
+        "日常高频使用的生产力仪表盘、个人知识库概览、财务与日程看板"
+      ],
+      "when_not_to_use": [
+        "需要炫酷暗黑舞台氛围的娱乐或游戏界面"
+      ],
+      "tokens": {
+        "--grid-gap": "8px",
+        "--tint-alpha": "0.08"
+      },
+      "knobs": [
+        {
+          "key": "--grid-gap",
+          "label": "栅格间隙",
+          "unit": "px",
+          "min": 4,
+          "max": 18,
+          "step": 2,
+          "default": 8
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.16,
+          1.0,
+          0.3,
+          1.0
+        ],
+        "label": "Calm Shift · 温润重排"
+      },
+      "state_machine": [
+        {
+          "state": "tinted-hero",
+          "trigger": "切换主角",
+          "visual": "主角卡 span 2 且染 8% 轻品牌底色，其余维持中性浅底",
+          "timing": "360ms"
+        }
+      ],
+      "do_not": [
+        "禁止在浅色界面给每张卡都加浓重黑色投影（用微弱色阶差与栏宽比区分层级更高级）",
+        "禁止超过 1 张卡同时使用品牌浅底强调（一次只给主角染色）",
+        "禁止忽略字号阶梯（主角核心数字应至少是辅卡标签的 2 倍）",
+        "禁止把网格间距压得过挤（桌面端卡片间距保持 10–18px 呼吸感）"
+      ],
+      "self_check": [
+        "浅色背景上是否仅有一张卡携带轻品牌底色强调？",
+        "去掉所有粗重边框后，层级秩序是否依然清晰？",
+        "切换主角时比例变化是否直观可读？"
+      ],
+      "code_snippet": "<style>\n.lt-grid { --grid-gap: 10px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 1fr; gap: var(--grid-gap); min-height: 160px; }\n.lt-card { border-radius: 12px; background: rgba(0,0,0,.04); padding: 12px; }\n.lt-card.hero { grid-column: span 2; background: rgba(0,113,227,.08); }\n</style>\n<div class=\"lt-grid\"><div class=\"lt-card hero\"><small>本周重点</small><br><b>94.2%</b></div><div class=\"lt-card\">待办 4</div><div class=\"lt-card\">已完成 18</div></div>",
+      "specimen_url": "specimens/light-asymmetric-columns.html",
+      "logical_size": [
+        740,
+        410
+      ],
+      "featured": false
+    },
+    {
+      "id": "dot-matrix-whitespace",
+      "category": "spatial-hierarchy",
+      "name_cn": "点阵留白节奏网格",
+      "name_en": "Dot Matrix Whitespace",
+      "demo": {
+        "kind": "lay",
+        "variant": "dot"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "click",
+        "state"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "layout",
+      "symptoms": [
+        "画布太空洞",
+        "点阵背景",
+        "工坊质感",
+        "dot grid",
+        "canvas whitespace"
+      ],
+      "essence": "以纯 CSS 12px 极淡点阵承托稀疏卡片，让大面积留白成为有坐标感的工程图纸，而非“没填满的空白”。",
+      "when_to_use": [
+        "节点画布、设计系统工作台、极简硬件参数看板、概念原型演示"
+      ],
+      "when_not_to_use": [
+        "文字行距紧凑的长文章正文背景（点阵会干扰眼球逐行扫读）"
+      ],
+      "tokens": {
+        "--dot-step": "12px",
+        "--grid-gap": "10px"
+      },
+      "knobs": [
+        {
+          "key": "--dot-step",
+          "label": "点阵步距",
+          "unit": "px",
+          "min": 8,
+          "max": 24,
+          "step": 2,
+          "default": 12
+        },
+        {
+          "key": "--grid-gap",
+          "label": "卡片留白",
+          "unit": "px",
+          "min": 6,
+          "max": 20,
+          "step": 2,
+          "default": 10
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.16,
+          1.0,
+          0.3,
+          1.0
+        ],
+        "label": "Grid Cadence · 网格节拍"
+      },
+      "state_machine": [
+        {
+          "state": "sparse-canvas",
+          "trigger": "切换高亮模块",
+          "visual": "点阵画布保持安静，选中卡轻盈浮起聚焦",
+          "timing": "320ms"
+        }
+      ],
+      "do_not": [
+        "禁止把点阵颜色设得太深（透明度必须控制在 0.10–0.16，高于 0.25 会显得像麻点噪点）",
+        "禁止把点阵画布塞得满满当当（至少留出 30% 可见点阵呼吸空间，否则点阵失去意义）",
+        "禁止用大体积 PNG/SVG 图片贴图，用 1 行 CSS radial-gradient 即可零请求实现",
+        "禁止在点阵上放透明无底的细小文字（卡片本身应有实底遮住后方圆点）"
+      ],
+      "self_check": [
+        "点阵是否用纯 CSS radial-gradient 实现且对比度极克制？",
+        "卡片内部文字背后是否有干净底色不被圆点干扰？",
+        "画布留白是否显得有秩序感而非空荡？"
+      ],
+      "code_snippet": "<style>\n.dot-canvas { --dot-step: 12px; --grid-gap: 12px; padding: 18px; border-radius: 16px; background-color: #f7f4ec; background-image: radial-gradient(rgba(34,29,21,.15) 1px, transparent 1.3px); background-size: var(--dot-step) var(--dot-step); display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--grid-gap); }\n.dot-card { background: #fffdf8; border: 1px solid rgba(34,29,21,.08); border-radius: 12px; padding: 14px; }\n</style>\n<div class=\"dot-canvas\"><div class=\"dot-card\">模块 A</div><div class=\"dot-card\">模块 B</div><div class=\"dot-card\">模块 C</div></div>",
+      "specimen_url": "specimens/dot-matrix-whitespace.html",
+      "logical_size": [
+        740,
+        410
+      ],
+      "featured": false
+    },
+    {
+      "id": "capsule-metric-bars",
+      "category": "spatial-hierarchy",
+      "name_cn": "胶囊量表主次排版",
+      "name_en": "Capsule Metric Layout",
+      "demo": {
+        "kind": "lay",
+        "variant": "capsule"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "click",
+        "state"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "layout",
+      "symptoms": [
+        "指标对比",
+        "进度条列表",
+        "量表排版",
+        "capsule metrics",
+        "horizontal bars"
+      ],
+      "essence": "把多组指标压成等高横向胶囊量表，按数值自然拉开条形长度对比，点击切换聚焦行高亮解读。",
+      "when_to_use": [
+        "配额消耗、渠道占比、评分维度、预算进度对比面板"
+      ],
+      "when_not_to_use": [
+        "包含负值或跨度 1000 倍以上的极端对数数据"
+      ],
+      "tokens": {
+        "--bar-h": "8px",
+        "--bar-ms": "360ms"
+      },
+      "knobs": [
+        {
+          "key": "--bar-h",
+          "label": "量表粗细",
+          "unit": "px",
+          "min": 4,
+          "max": 16,
+          "step": 2,
+          "default": 8
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.16,
+          1.0,
+          0.3,
+          1.0
+        ],
+        "label": "Meter Glide · 量表滑移"
+      },
+      "state_machine": [
+        {
+          "state": "focused-row",
+          "trigger": "切换主角行",
+          "visual": "当前行胶囊条高亮提纯，数值对齐右缘",
+          "timing": "var(--bar-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止用 4 种以上高饱和彩虹色涂满每一条进度条（应统一主色，仅靠透明度/明度分主次）",
+        "禁止数值不右对齐或不用 tabular-nums，导致多行数字参差不齐无法快速比大小",
+        "禁止省略条形底槽，否则用户看不出当前占总量的比例",
+        "禁止每行塞入超过 3 个字段导致横向挤压量表空间"
+      ],
+      "self_check": [
+        "多行量表的标签、条形槽、数值是否形成清晰的三列对齐？",
+        "量表全圆角与外层胶囊容器风格是否一致？",
+        "选中主角行时主次层次是否立即凸显？"
+      ],
+      "code_snippet": "<style>\n.cap-list { --bar-h: 8px; display: grid; gap: 8px; width: 280px; }\n.cap-row { display: grid; grid-template-columns: 64px 1fr 48px; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: rgba(0,0,0,.04); font: 600 12.5px/1 system-ui; }\n.cap-track { height: var(--bar-h); border-radius: 999px; background: rgba(0,0,0,.08); overflow: hidden; }\n.cap-fill { height: 100%; border-radius: 999px; background: #0071e3; }\n.cap-row b { text-align: right; font-variant-numeric: tabular-nums; }\n</style>\n<div class=\"cap-list\"><div class=\"cap-row\"><span>主渠道</span><div class=\"cap-track\"><div class=\"cap-fill\" style=\"width:82%\"></div></div><b>82%</b></div></div>",
+      "specimen_url": "specimens/capsule-metric-bars.html",
+      "logical_size": [
+        740,
+        410
+      ],
+      "featured": false
+    },
+    {
+      "id": "single-light-power-switch",
+      "category": "surface-optics",
+      "name_cn": "单光源凸起电源开关",
+      "name_en": "Sculpted Power Switch",
+      "demo": {
+        "kind": "neu",
+        "variant": "switch"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "press",
+        "click"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "开关太廉价",
+        "新拟态开关",
+        "电源切换",
+        "toggle switch",
+        "neumorphic switch"
+      ],
+      "essence": "遵守“左上单一光源”铁律：凹槽轨道接住按压，外凸旋钮向右滑过 50px 并点亮中心状态灯，零描边呈现实体雕刻感。",
+      "when_to_use": [
+        "硬件控制台开关、偏好设置主开关、主题/音频总闸"
+      ],
+      "when_not_to_use": [
+        "高对比度无障碍极简表单（若需强无障碍兼容，应辅以明确 ON/OFF 文字标签）"
+      ],
+      "tokens": {
+        "--sw-ms": "380ms",
+        "--accent": "#0071e3"
+      },
+      "knobs": [
+        {
+          "key": "--sw-ms",
+          "label": "滑动时长",
+          "unit": "ms",
+          "min": 140,
+          "max": 700,
+          "step": 20,
+          "default": 380
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          0.61,
+          0.36,
+          1.0
+        ],
+        "label": "Weighted Slide · 实体滑移"
+      },
+      "state_machine": [
+        {
+          "state": "off",
+          "trigger": "aria-checked='false'",
+          "visual": "旋钮居左，中心灯灭（冷灰），下方读数显示 OFF",
+          "timing": "var(--sw-ms)"
+        },
+        {
+          "state": "on",
+          "trigger": "click / Space -> aria-checked='true'",
+          "visual": "旋钮 translateX(50px)，中心灯与状态点同步点亮品牌蓝",
+          "timing": "var(--sw-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止同时画边框线 + 新拟态内外阴影（边框会彻底破坏“从同一块材料雕刻出来”的光学错觉）",
+        "禁止在纯白 #fff 或纯黑 #000 上做新拟态（必须用 #e8e8ed 类中性灰底，才有空间同时放亮面和暗影）",
+        "禁止仅靠中心小圆点颜色区分开关状态（色弱用户难辨，必须配合位移 + ON/OFF 文字读数）",
+        "禁止用 left 位移驱动滑块，必须使用 transform: translateX"
+      ],
+      "self_check": [
+        "凹槽是左上暗右下亮（内凹），旋钮是左上亮右下暗（外凸），光源方向完全自洽？",
+        "点击或按 Space 键是否同步更新 role='switch' 的 aria-checked 与文字状态？",
+        "是否完全没有使用任何 border 线？"
+      ],
+      "code_snippet": "<style>\n.neu-stage { --sw-ms: 380ms; --accent: #0071e3; padding: 24px; border-radius: 16px; background: #e8e8ed; display: inline-flex; align-items: center; gap: 12px; }\n.neu-sw { position: relative; width: 96px; height: 46px; border: 0; border-radius: 999px; background: #e8e8ed; cursor: pointer; box-shadow: inset 3px 3px 7px rgba(0,0,0,.14), inset -2px -2px 0 rgba(255,255,255,.88); }\n.neu-knob { position: absolute; top: 5px; left: 5px; width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(145deg,#fff,#e0e0e6); box-shadow: 3px 4px 9px rgba(0,0,0,.16), inset 1px 1px 0 #fff; transition: transform var(--sw-ms) cubic-bezier(0.22,0.61,0.36,1); }\n.neu-knob::after { content: \"\"; position: absolute; inset: 12px; border-radius: 50%; background: #c5c5cc; transition: background-color 280ms; }\n.neu-sw[aria-checked=\"true\"] .neu-knob { transform: translateX(50px); }\n.neu-sw[aria-checked=\"true\"] .neu-knob::after { background: var(--accent); }\n</style>\n<div class=\"neu-stage\"><button class=\"neu-sw\" role=\"switch\" aria-checked=\"false\" onclick=\"this.setAttribute('aria-checked', this.getAttribute('aria-checked')!=='true')\"><span class=\"neu-knob\"></span></button></div>",
+      "specimen_url": "specimens/single-light-power-switch.html",
+      "logical_size": [
+        420,
+        270
+      ],
+      "featured": false
+    },
+    {
+      "id": "sculpted-segment-control",
+      "category": "surface-optics",
+      "name_cn": "凸见凹动分段切换",
+      "name_en": "Sculpted Segment Control",
+      "demo": {
+        "kind": "neu",
+        "variant": "segment"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "click",
+        "state"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "分段按钮",
+        "模式切换",
+        "实体凹槽",
+        "segmented control"
+      ],
+      "essence": "所有选项共居一个内凹托盘，当前激活项抬起为亮白凸起块并投下软影，其余选项自然退回凹槽之中。",
+      "when_to_use": [
+        "2–4 个互斥模式切换（如日/夜/自动、快充/均衡/节能、列表/网格）"
+      ],
+      "when_not_to_use": [
+        "5 个以上长文案选项（分段会挤成窄条难以阅读）"
+      ],
+      "tokens": {
+        "--seg-ms": "240ms",
+        "--accent": "#0071e3"
+      },
+      "knobs": [
+        {
+          "key": "--seg-ms",
+          "label": "浮起时长",
+          "unit": "ms",
+          "min": 100,
+          "max": 480,
+          "step": 20,
+          "default": 240
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          0.61,
+          0.36,
+          1.0
+        ],
+        "label": "Relief Lift · 浮雕抬起"
+      },
+      "state_machine": [
+        {
+          "state": "recessed",
+          "trigger": "未选中项",
+          "visual": "透明融入内凹底槽，次级灰字",
+          "timing": "—"
+        },
+        {
+          "state": "elevated",
+          "trigger": "click",
+          "visual": "纯白浮起块 + 右下柔和投影 + 品牌色字",
+          "timing": "var(--seg-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止在外槽和内块之间画竖向分割线再叠加阴影（显得杂乱老旧）",
+        "禁止内块圆角大于外槽圆角（内圆角 = 外圆角 - 内边距 padding）",
+        "禁止选项文案长短悬殊且不对齐，优先保持等宽或协调留白",
+        "禁止忽略 aria-pressed 语义状态"
+      ],
+      "self_check": [
+        "外槽内凹、激活项外凸，是否遵循同一左上光源？",
+        "内块圆角与外槽圆角是否满足同心关系（如外 12px、padding 4px、内 8px）？",
+        "切换流畅且无任何文字跳动？"
+      ],
+      "code_snippet": "<style>\n.neu-seg { --seg-ms: 240ms; display: inline-flex; padding: 4px; border-radius: 12px; background: #e8e8ed; box-shadow: inset 2px 2px 5px rgba(0,0,0,.13), inset -1px -1px 0 rgba(255,255,255,.85); }\n.neu-seg button { border: 0; border-radius: 8px; padding: 7px 14px; background: transparent; color: #57503f; font: 600 12.5px/1 system-ui; cursor: pointer; transition: background-color var(--seg-ms), box-shadow var(--seg-ms), color var(--seg-ms); }\n.neu-seg button.on { background: #fff; color: #0071e3; box-shadow: 1px 2px 6px rgba(0,0,0,.14); }\n</style>\n<div class=\"neu-seg\"><button class=\"on\">极速</button><button>标准</button><button>静音</button></div>",
+      "specimen_url": "specimens/sculpted-segment-control.html",
+      "logical_size": [
+        420,
+        270
+      ],
+      "featured": false
+    },
+    {
+      "id": "tactile-calendar-matrix",
+      "category": "surface-optics",
+      "name_cn": "软光影日历格点",
+      "name_en": "Tactile Calendar Grid",
+      "demo": {
+        "kind": "neu",
+        "variant": "calendar"
+      },
+      "default_surface": "paper",
+      "drive": [
+        "click",
+        "state"
+      ],
+      "tech": [
+        "css-transition"
+      ],
+      "scope": "pattern",
+      "symptoms": [
+        "日期选择器丑",
+        "日历格点",
+        "预订日历",
+        "calendar picker"
+      ],
+      "essence": "去掉传统日历密密麻麻的表格线，在均匀 7 列灰调平面上仅用单枚主色浮起格点锁定选中日期。",
+      "when_to_use": [
+        "极简预约日历、签到打卡面板、轻量级单日选择器"
+      ],
+      "when_not_to_use": [
+        "承载多条日程文本块的重型日程排班表"
+      ],
+      "tokens": {
+        "--cal-ms": "200ms",
+        "--accent": "#0071e3"
+      },
+      "knobs": [
+        {
+          "key": "--cal-ms",
+          "label": "选日过渡",
+          "unit": "ms",
+          "min": 80,
+          "max": 400,
+          "step": 20,
+          "default": 200
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.22,
+          1.0,
+          0.36,
+          1.0
+        ],
+        "label": "Grid Pop · 格点落定"
+      },
+      "state_machine": [
+        {
+          "state": "day",
+          "trigger": "普通日期",
+          "visual": "无框等宽数字，悬停微亮底色",
+          "timing": "150ms"
+        },
+        {
+          "state": "selected",
+          "trigger": "click",
+          "visual": "品牌主色圆角块 + 轻投影浮起 + 白字",
+          "timing": "var(--cal-ms)"
+        }
+      ],
+      "do_not": [
+        "禁止给每个日期单元格画满 1px 网格线（网格对齐本身就足够表达结构，多余线条制造视觉噪音）",
+        "禁止日期数字不设 tabular-nums（1 和 28 对齐错位显得粗糙）",
+        "禁止点击热区过小（桌面端每个日期块至少 28×28px）",
+        "禁止缺少当前已选日期的明确文本回执"
+      ],
+      "self_check": [
+        "无任何网格边框线的情况下，7 列矩阵是否依然整齐利落？",
+        "单数日期与双数日期在列中是否完美居中对齐？",
+        "选中态投影与反差是否让目标日期一眼跳出？"
+      ],
+      "code_snippet": "<style>\n.neu-cal { --cal-ms: 200ms; --accent: #0071e3; display: grid; grid-template-columns: repeat(7, 30px); gap: 4px; padding: 14px; border-radius: 14px; background: #e8e8ed; }\n.neu-cal button { height: 28px; border: 0; border-radius: 8px; background: transparent; color: #57503f; font: 600 11.5px/1 system-ui; font-variant-numeric: tabular-nums; cursor: pointer; transition: background-color var(--cal-ms), color var(--cal-ms), box-shadow var(--cal-ms); }\n.neu-cal button:hover { background: rgba(255,255,255,.55); }\n.neu-cal button.on { background: var(--accent); color: #fff; box-shadow: 0 3px 8px rgba(0,113,227,.32); }\n</style>\n<div class=\"neu-cal\"><button>8</button><button>9</button><button class=\"on\">10</button><button>11</button><button>12</button><button>13</button><button>14</button></div>",
+      "specimen_url": "specimens/tactile-calendar-matrix.html",
+      "logical_size": [
+        420,
+        270
+      ],
+      "featured": false
+    },
+    {
+      "id": "conic-border-beam",
+      "category": "surface-optics",
+      "name_cn": "锥形光带边缘流光",
+      "name_en": "Conic Border Beam",
+      "demo": {
+        "kind": "anim",
+        "variant": "beam"
+      },
+      "default_surface": "dark",
+      "drive": [
+        "time"
+      ],
+      "tech": [
+        "css-keyframes"
+      ],
+      "scope": "atom",
+      "symptoms": [
+        "AI卡片边框",
+        "边缘流光",
+        "炫酷高亮",
+        "border beam",
+        "conic glow"
+      ],
+      "essence": "底层伪元素旋转 12% 宽度的 conic-gradient 光带，上层内缩 1.5px 的实心遮罩只露出精致细缝，零 JS 渲染 60fps 边缘流光。",
+      "when_to_use": [
+        "AI 生成中的活跃卡片、定价页唯一主推套餐、重要状态高亮容器"
+      ],
+      "when_not_to_use": [
+        "同屏超过 2 张卡片同时流光（满屏转圈光带会严重分散注意力显得廉价）"
+      ],
+      "tokens": {
+        "--beam-s": "3s",
+        "--beam-width": "1.5px"
+      },
+      "knobs": [
+        {
+          "key": "--beam-s",
+          "label": "环绕周期",
+          "unit": "s",
+          "min": 1.2,
+          "max": 8.0,
+          "step": 0.2,
+          "default": 3.0
+        },
+        {
+          "key": "--beam-width",
+          "label": "光缝粗细",
+          "unit": "px",
+          "min": 1,
+          "max": 3.5,
+          "step": 0.5,
+          "default": 1.5
+        }
+      ],
+      "easing_curve": {
+        "bezier": [
+          0.0,
+          0.0,
+          1.0,
+          1.0
+        ],
+        "label": "Continuous Orbit · 匀速环流"
+      },
+      "state_machine": [
+        {
+          "state": "orbiting",
+          "trigger": "进入视口",
+          "visual": "conic-gradient 伪元素 360° 匀速旋转，仅在 1.5px 边缝透光",
+          "timing": "var(--beam-s) linear infinite"
+        },
+        {
+          "state": "paused",
+          "trigger": "离视口 / reduced-motion",
+          "visual": "暂停旋转保留静谧微边",
+          "timing": "—"
+        }
+      ],
+      "do_not": [
+        "禁止一页里给 6 张卡片全部加上流光（边缘流光是“最高级稀缺注意力预算”，一屏最多 1–2 处）",
+        "禁止把光带宽度设成 50% 以上的粗俗彩虹圈（10%–16% 单色光尾最克制高级）",
+        "禁止忘记给内层遮罩留出同心圆角（外圆角 14px - 缝隙 1.5px = 内圆角 12.5px）",
+        "禁止移出视口后继续旋转消耗 GPU 合成层，必须用 IntersectionObserver 暂停"
+      ],
+      "self_check": [
+        "外容器与内遮罩圆角是否为严格同心圆角，拐角处光缝等宽不锯齿？",
+        "是否纯 CSS 伪元素 + transform: rotate(1turn) 实现，零 JS 帧计算？",
+        "一屏中是否克制地仅用于唯一重点卡片？"
+      ],
+      "code_snippet": "<style>\n.beam-card { --beam-s: 3s; --beam-width: 1.5px; position: relative; width: 200px; height: 110px; border-radius: 14px; overflow: hidden; background: #1d1d1f; display: grid; place-items: center; }\n.beam-card::before { content: \"\"; position: absolute; inset: -50%; background: conic-gradient(from 0deg, transparent 0 68%, #2997ff 82%, transparent 96%); animation: beam-spin var(--beam-s) linear infinite; }\n.beam-card::after { content: \"\"; position: absolute; inset: var(--beam-width); border-radius: calc(14px - var(--beam-width)); background: #242629; }\n.beam-card > span { position: relative; z-index: 1; color: #f2f0e9; font: 600 13px/1 system-ui; }\n@keyframes beam-spin { to { transform: rotate(1turn); } }\n</style>\n<div class=\"beam-card\"><span>AI 正在生成</span></div>",
+      "specimen_url": "specimens/conic-border-beam.html",
+      "logical_size": [
+        380,
+        220
+      ],
+      "featured": false
+    }
+  ],
+  "featured_order": [
+    "coverflow-depth-stage",
+    "glass-drag-bookshelf",
+    "editorial-image-hero",
+    "rotary-climate-dial",
+    "perspective-tilt-glare"
+  ]
+}

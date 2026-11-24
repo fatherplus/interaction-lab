@@ -1,0 +1,21 @@
+services:
+  interaction-lab:
+    build: .
+    image: interaction-lab:latest
+    container_name: interaction-lab
+    restart: unless-stopped
+    # Bind to loopback only: put Caddy/Nginx in front for HTTPS.
+    # Use "8900:8900" instead if you terminate TLS elsewhere on the host.
+    ports:
+      - "127.0.0.1:8900:8900"
+    environment:
+      IL_HOST: 0.0.0.0
+      IL_PORT: "8900"
+      IL_DB_PATH: /data/telemetry.sqlite
+      # Set a fixed random hex secret so visitor hashes stay stable across restarts:
+      # IL_TELEMETRY_SALT: <openssl rand -hex 32>
+      # Disable all collection (public demo, privacy-sensitive deployments):
+      # IL_TELEMETRY: "off"
+    volumes:
+      - ./telemetry-data:/data
+    # The image ships a HEALTHCHECK against /api/health.

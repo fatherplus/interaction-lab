@@ -28,6 +28,7 @@ Interaction Lab 把 48 个高保真交互实现按 **6 大交互意图** 组织�
 - [项目结构](#项目结构)
 - [新增一个标本](#新增一个标本)
 - [出处与致谢](#出处与致谢)
+- [参与贡献](#参与贡献)
 - [License](#license)
 
 ## 特性
@@ -163,6 +164,10 @@ tests/                    # 标准库 unittest 冒烟测试
 如果你认为某处标注不准确，或希望调整署名方式，请开 issue，我们会及时处理。
 
 展示字体：`assets/` 内附 **Bricolage Grotesque**（SIL Open Font License 1.1，见 `assets/OFL.txt`）。当前界面使用系统字体栈，这些资产保留给需要自托管展示字体的自建版本，默认构建不引用它们。
+
+## 参与贡献
+
+欢迎补标本、修参数、改文案。动手前请读 [CONTRIBUTING.md](CONTRIBUTING.md)：三条硬约束是零第三方依赖、数据同源（`data/patterns.json`）和桌面优先。开发循环就是 `python3 build.py && python3 -m unittest discover -s tests -v`。
 
 ## License
 
